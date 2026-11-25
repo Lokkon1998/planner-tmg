@@ -1,0 +1,1818 @@
+```html
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>План дня PRO — Telegram Mini App</title>
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    },
+                    colors: {
+                        surface: {
+                            950: '#07070c',
+                            900: '#0e0e16',
+                            800: '#161622',
+                            700: '#202031',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg-base: #07070c;
+            --accent-indigo: #6366f1;
+            --accent-violet: #8b5cf6;
+            --accent-emerald: #10b981;
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: #ffffff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Вынесенный GPU-фон без перерисовки при скролле */
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            transform: translate3d(0, 0, 0);
+            will-change: transform;
+            background:
+                radial-gradient(circle at 12% 0%, rgba(99, 102, 241, 0.20) 0%, transparent 46%),
+                radial-gradient(circle at 90% 10%, rgba(139, 92, 246, 0.16) 0%, transparent 42%),
+                radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.10) 0%, transparent 50%);
+        }
+
+        /* Лёгкие композитные карточки для стабильных 120 FPS */
+        .glass-card {
+            background: linear-gradient(155deg, rgba(26, 26, 40, 0.96), rgba(17, 17, 27, 0.98));
+            border: 1px solid rgba(255, 255, 255, 0.11);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+            transform: translate3d(0, 0, 0);
+            contain: layout style;
+        }
+
+        /* Скрытие полос прокрутки для горизонтальных лент */
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-x: contain;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Анимация пламени стрика */
+        @keyframes flameFloat {
+            0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+            50% { transform: translate3d(0, -2px, 0) scale(1.06); }
+        }
+        .flame-anim {
+            animation: flameFloat 2.8s ease-in-out infinite;
+            will-change: transform;
+        }
+
+        /* GPU-ускоренные модальные окна */
+        .modal-backdrop {
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+            transition: opacity 0.2s cubic-bezier(0.2, 0, 0, 1), visibility 0.2s;
+            will-change: opacity;
+        }
+        .modal-backdrop.active {
+            opacity: 1;
+            pointer-events: auto;
+            visibility: visible;
+        }
+
+        .bottom-sheet {
+            transform: translate3d(0, 100%, 0);
+            transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: transform;
+        }
+        .modal-backdrop.active .bottom-sheet {
+            transform: translate3d(0, 0, 0);
+        }
+
+        .center-modal {
+            transform: translate3d(0, 0, 0) scale(0.94);
+            opacity: 0;
+            transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
+            will-change: transform, opacity;
+        }
+        .modal-backdrop.active .center-modal {
+            transform: translate3d(0, 0, 0) scale(1);
+            opacity: 1;
+        }
+
+        /* Анимированный чекбокс задачи */
+        .task-checkbox {
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease;
+            will-change: transform;
+        }
+        .task-completed .task-checkbox {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-color: #10b981;
+            box-shadow: 0 0 14px rgba(16, 185, 129, 0.45);
+            transform: translate3d(0, 0, 0) scale(1.06);
+        }
+        .task-completed .task-title {
+            text-decoration: line-through;
+            color: rgba(255, 255, 255, 0.45);
+        }
+        .task-completed .task-meta {
+            opacity: 0.55;
+        }
+
+        /* Подсветка микро-шагов в режиме "На нуле" */
+        .micro-step-glow {
+            border-color: rgba(16, 185, 129, 0.65) !important;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.20), inset 0 0 0 1px rgba(16, 185, 129, 0.25) !important;
+        }
+
+        /* SVG кольцо прогресса */
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+            will-change: stroke-dashoffset;
+        }
+
+        /* Нативный календарь и выбор времени */
+        input[type="time"]::-webkit-calendar-picker-indicator,
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between pb-28 antialiased">
+
+    <!-- GPU-фон -->
+    <div class="ambient-bg"></div>
+
+    <!-- Canvas для 120 FPS конфетти -->
+    <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
+
+    <!-- Главный контейнер -->
+    <div class="w-full max-w-lg mx-auto px-4 pt-4">
+
+        <!-- ===================================================================== -->
+        <!-- 1. ШАПКА: План дня, Контрастный заголовок, Streak, Календарь, Кольцо  -->
+        <!-- ===================================================================== -->
+        <header class="flex items-center justify-between gap-2.5 mb-4">
+            <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-indigo-300">План дня</span>
+                    <span class="text-white/30 text-xs">•</span>
+                    <span id="header-date-sub" class="text-xs font-semibold text-white/90 truncate">Ср, 25 ноября</span>
+                </div>
+                <h1 id="header-main-title" class="text-2xl sm:text-[26px] font-black tracking-tight text-white leading-tight mt-0.5 truncate">
+                    Сегодня
+                </h1>
+            </div>
+
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <!-- Кнопка быстрого возврата на "Сегодня" -->
+                <button id="btn-back-today" onclick="selectToday()" class="hidden px-2.5 py-2 rounded-xl bg-indigo-500/25 border border-indigo-400/45 text-xs font-bold text-white active:scale-95 transition-transform">
+                    Сегодня
+                </button>
+
+                <!-- Бейдж серии выполненных дней (🔥 Streak) -->
+                <button onclick="openStreakModal()" class="glass-card px-2.5 py-1.5 rounded-2xl flex items-center gap-1.5 active:scale-95 transition-transform relative overflow-hidden" title="Серия выполненных дней">
+                    <div class="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-orange-500/15"></div>
+                    <span class="text-lg leading-none flame-anim relative z-10">🔥</span>
+                    <div class="text-left relative z-10">
+                        <div class="flex items-baseline gap-0.5 leading-none">
+                            <span id="streak-count" class="text-sm font-black text-amber-300">0</span>
+                            <span class="text-[10px] font-bold text-white">дн</span>
+                        </div>
+                        <span class="block text-[9px] font-bold uppercase tracking-wider text-amber-200/90 mt-0.5">Streak</span>
+                    </div>
+                </button>
+
+                <!-- Кнопка календаря для перехода к любой дате -->
+                <label for="header-calendar-input" class="relative w-11 h-11 rounded-2xl glass-card flex items-center justify-center text-white hover:border-indigo-400/50 active:scale-95 transition-transform cursor-pointer" title="Перейти к любой дате">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <rect x="3" y="4" width="18" height="18" rx="4" ry="4"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    <input type="date" id="header-calendar-input" class="absolute inset-0 opacity-0 w-full h-full cursor-pointer">
+                </label>
+
+                <!-- Круговой индикатор прогресса дня в % -->
+                <div class="glass-card w-11 h-11 rounded-2xl flex items-center justify-center relative" title="Прогресс выполнения за день">
+                    <svg class="w-9 h-9" viewBox="0 0 40 40">
+                        <circle cx="20" cy="20" r="15.5" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="3.5"></circle>
+                        <circle id="header-progress-ring" class="progress-ring-circle" cx="20" cy="20" r="15.5" fill="none" stroke="url(#headerRingGrad)" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="97.39" stroke-dashoffset="97.39"></circle>
+                        <defs>
+                            <linearGradient id="headerRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#6366f1" />
+                                <stop offset="50%" stop-color="#8b5cf6" />
+                                <stop offset="100%" stop-color="#10b981" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <span id="header-progress-pct" class="absolute text-[9.5px] font-black text-white">0%</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- ===================================================================== -->
+        <!-- 2. ГОРИЗОНТАЛЬНАЯ ЛЕНТА ДАТ (ВЧЕРА, СЕГОДНЯ, БЛИЖАЙШИЕ 10 ДНЕЙ)        -->
+        <!-- ===================================================================== -->
+        <section class="mb-4">
+            <div id="date-strip" class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                <!-- Карточки дат генерируются через JS с ярким белым текстом -->
+            </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- 3. ЧЕК-ИН «РЕСУРС СЕЙЧАС»                                             -->
+        <!-- ===================================================================== -->
+        <section class="glass-card rounded-2xl p-3 mb-4">
+            <div class="flex items-center justify-between gap-2">
+                <span class="text-xs font-bold text-white pl-1 whitespace-nowrap">Ресурс сейчас:</span>
+                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar" id="energy-buttons">
+                    <button type="button" data-energy="high" onclick="setEnergyLevel('high')" class="energy-btn px-2.5 py-1.5 rounded-xl text-xs font-bold transition-transform active:scale-95 flex items-center gap-1 border border-transparent whitespace-nowrap">
+                        <span>🔥</span><span>На заряде</span>
+                    </button>
+                    <button type="button" data-energy="normal" onclick="setEnergyLevel('normal')" class="energy-btn px-2.5 py-1.5 rounded-xl text-xs font-bold transition-transform active:scale-95 flex items-center gap-1 border border-transparent whitespace-nowrap">
+                        <span>😐</span><span>Норм</span>
+                    </button>
+                    <button type="button" data-energy="low" onclick="setEnergyLevel('low')" class="energy-btn px-2.5 py-1.5 rounded-xl text-xs font-bold transition-transform active:scale-95 flex items-center gap-1 border border-transparent whitespace-nowrap">
+                        <span>🪫</span><span>На нуле</span>
+                    </button>
+                </div>
+            </div>
+            <div id="low-energy-hint" class="hidden mt-2.5 pt-2.5 border-t border-white/10 flex items-start gap-2 text-xs text-emerald-300">
+                <span class="text-sm leading-none mt-0.5">🌱</span>
+                <p class="leading-relaxed">
+                    Включён щадящий режим: задачи с низким порогом входа подсвечены бейджем <b>«🌱 Микро-шаг»</b>. Сделай хотя бы одну — серия дней сохранится!
+                </p>
+            </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- 4. БЛОК «РУТИНЫ В 1 КЛИК»                                             -->
+        <!-- ===================================================================== -->
+        <section class="mb-5">
+            <div class="flex items-center justify-between mb-2 px-0.5">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-white/90">Рутины в 1 клик</span>
+                <span class="text-[11px] font-medium text-zinc-400">Нажми, чтобы добавить в план</span>
+            </div>
+            <div id="routines-strip" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                <!-- Чипсы рутин + кнопка "+ Своя" рендерятся через JS -->
+            </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- 5. ТАЙМЛАЙН ДНЯ И ЗАДАЧИ БЕЗ ТОЧНОГО ВРЕМЕНИ                          -->
+        <!-- ===================================================================== -->
+        <section>
+            <div class="flex items-center justify-between mb-3 px-0.5">
+                <div class="flex items-center gap-2">
+                    <h2 class="text-xs font-extrabold uppercase tracking-wider text-white">Таймлайн дня</h2>
+                    <span id="tasks-summary-badge" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-white/10 text-white">0 / 0</span>
+                </div>
+                <button id="btn-clear-done" onclick="clearCompletedToday()" class="hidden text-xs font-semibold text-zinc-400 hover:text-rose-400 transition-colors">
+                    Убрать выполненные
+                </button>
+            </div>
+
+            <!-- Контейнер таймлайна (задачи по времени с вертикальной шкалой и красной линией "Сейчас") -->
+            <div id="timeline-container" class="relative"></div>
+
+            <!-- Отдельный блок для задач без точного времени -->
+            <div id="untimed-section" class="hidden mt-5">
+                <div class="flex items-center gap-2 mb-2.5 px-0.5">
+                    <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-white/90">Без точного времени</h3>
+                </div>
+                <div id="untimed-list" class="space-y-2.5"></div>
+            </div>
+
+            <!-- Пустое состояние -->
+            <div id="empty-state" class="hidden flex-col items-center justify-center text-center py-12 px-5 glass-card rounded-3xl mt-2">
+                <div class="w-14 h-14 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center mb-3 text-2xl">
+                    ✨
+                </div>
+                <p class="text-base font-extrabold text-white mb-1">На этот день задач пока нет</p>
+                <p class="text-xs text-zinc-300 max-w-xs leading-relaxed">
+                    Ткни по быстрой рутине выше или нажми <b>«+ Добавить задачу»</b> снизу справа.
+                </p>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 7. ПЛАВАЮЩАЯ КНОПКА «+ ДОБАВИТЬ ЗАДАЧУ» (СНИЗУ СПРАВА)                -->
+    <!-- ===================================================================== -->
+    <div class="fixed bottom-5 right-4 z-30">
+        <button onclick="openTaskModal()" class="py-3.5 px-5 rounded-2xl bg-gradient-to-r from-indigo-500 via-violet-500 to-indigo-600 text-white font-extrabold text-sm shadow-[0_10px_28px_rgba(99,102,241,0.5)] border border-indigo-300/30 flex items-center gap-2 active:scale-95 transition-transform">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Добавить задачу</span>
+        </button>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- МОДАЛКА А: СОЗДАНИЕ / РЕДАКТИРОВАНИЕ ЗАДАЧИ                           -->
+    <!-- ===================================================================== -->
+    <div id="task-modal" class="modal-backdrop fixed inset-0 z-40 bg-black/75 flex items-end justify-center" onclick="handleBackdropClick(event, 'task-modal')">
+        <div class="bottom-sheet w-full max-w-lg bg-surface-900 rounded-t-3xl p-5 pb-8 border-t border-white/15 shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div class="w-10 h-1 bg-white/25 rounded-full mx-auto mb-4"></div>
+
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="task-modal-heading" class="text-lg font-black text-white">Новая задача</h3>
+                <button onclick="closeModal('task-modal')" class="p-2 rounded-full bg-white/10 text-white hover:bg-white/15 active:scale-90 transition-transform">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="task-form" onsubmit="handleSaveTask(event)" class="space-y-4">
+                <input type="hidden" id="task-id-input" value="">
+
+                <!-- Название задачи -->
+                <div>
+                    <label for="task-title-input" class="block text-xs font-bold text-white/90 mb-1.5">Название задачи</label>
+                    <input
+                        type="text"
+                        id="task-title-input"
+                        placeholder="Например: сделать 1 блок по учёбе или разобрать стол"
+                        required
+                        autocomplete="off"
+                        class="w-full px-4 py-3.5 rounded-2xl bg-surface-800 text-white placeholder-zinc-500 text-sm font-semibold border border-white/15 focus:outline-none focus:border-indigo-400"
+                    >
+                </div>
+
+                <!-- Время начала/конца и быстрые пресеты -->
+                <div>
+                    <label class="block text-xs font-bold text-white/90 mb-1.5">Время выполнения</label>
+
+                    <!-- Быстрые пресеты: 09:00, 12:00, 15:00, 18:00, 21:00, Без времени -->
+                    <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2">
+                        <button type="button" onclick="applyTimePreset('09:00')" class="time-preset-btn px-3 py-1.5 rounded-xl bg-surface-800 text-xs font-bold text-white border border-white/10 active:scale-95 transition-transform">09:00</button>
+                        <button type="button" onclick="applyTimePreset('12:00')" class="time-preset-btn px-3 py-1.5 rounded-xl bg-surface-800 text-xs font-bold text-white border border-white/10 active:scale-95 transition-transform">12:00</button>
+                        <button type="button" onclick="applyTimePreset('15:00')" class="time-preset-btn px-3 py-1.5 rounded-xl bg-surface-800 text-xs font-bold text-white border border-white/10 active:scale-95 transition-transform">15:00</button>
+                        <button type="button" onclick="applyTimePreset('18:00')" class="time-preset-btn px-3 py-1.5 rounded-xl bg-surface-800 text-xs font-bold text-white border border-white/10 active:scale-95 transition-transform">18:00</button>
+                        <button type="button" onclick="applyTimePreset('21:00')" class="time-preset-btn px-3 py-1.5 rounded-xl bg-surface-800 text-xs font-bold text-white border border-white/10 active:scale-95 transition-transform">21:00</button>
+                        <button type="button" id="preset-notime-btn" onclick="applyTimePreset('none')" class="time-preset-btn px-3 py-1.5 rounded-xl bg-surface-800 text-xs font-bold text-white border border-white/10 active:scale-95 transition-transform whitespace-nowrap">Без времени</button>
+                    </div>
+
+                    <div id="time-inputs-grid" class="grid grid-cols-2 gap-2.5 mt-1 transition-opacity duration-150">
+                        <div>
+                            <span class="block text-[11px] font-semibold text-zinc-400 mb-1">Начало</span>
+                            <input type="time" id="task-start-input" value="10:00" oninput="enableTimedMode()" class="w-full px-3.5 py-2.5 rounded-xl bg-surface-800 text-white text-sm font-bold border border-white/15 focus:outline-none focus:border-indigo-400">
+                        </div>
+                        <div>
+                            <span class="block text-[11px] font-semibold text-zinc-400 mb-1">Конец (необязательно)</span>
+                            <input type="time" id="task-end-input" oninput="enableTimedMode()" class="w-full px-3.5 py-2.5 rounded-xl bg-surface-800 text-white text-sm font-bold border border-white/15 focus:outline-none focus:border-indigo-400">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Категории: Учёба, Зал, Дела, Личное -->
+                <div>
+                    <label class="block text-xs font-bold text-white/90 mb-1.5">Категория</label>
+                    <div class="grid grid-cols-2 gap-2" id="category-selector">
+                        <button type="button" data-cat="Учёба" onclick="selectTaskCategory('Учёба')" class="cat-btn py-2.5 px-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 transition-transform active:scale-95">
+                            <span class="w-2.5 h-2.5 rounded-full bg-violet-400"></span><span>Учёба</span>
+                        </button>
+                        <button type="button" data-cat="Зал" onclick="selectTaskCategory('Зал')" class="cat-btn py-2.5 px-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 transition-transform active:scale-95">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span><span>Зал</span>
+                        </button>
+                        <button type="button" data-cat="Дела" onclick="selectTaskCategory('Дела')" class="cat-btn py-2.5 px-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 transition-transform active:scale-95">
+                            <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span><span>Дела</span>
+                        </button>
+                        <button type="button" data-cat="Личное" onclick="selectTaskCategory('Личное')" class="cat-btn py-2.5 px-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 transition-transform active:scale-95">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span><span>Личное</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Галочка «Микро-шаг (легко сделать даже без сил)» -->
+                <label class="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-surface-800 border border-white/10 cursor-pointer">
+                    <div class="flex items-center gap-2.5">
+                        <span class="text-xl leading-none">🌱</span>
+                        <div>
+                            <span class="block text-xs font-extrabold text-white">Микро-шаг (легко сделать даже без сил)</span>
+                            <span class="block text-[11px] text-zinc-400 mt-0.5">Подсветится зелёным в режиме «На нуле»</span>
+                        </div>
+                    </div>
+                    <input type="checkbox" id="task-micro-checkbox" class="w-5 h-5 rounded accent-emerald-500 cursor-pointer flex-shrink-0">
+                </label>
+
+                <button type="submit" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-600 text-white font-black text-sm shadow-lg active:scale-[0.98] transition-transform">
+                    Сохранить в план
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- МОДАЛКА Б: ПОЛНОЭКРАННЫЙ POMODORO ФОКУС-ТАЙМЕР (120 FPS SVG)           -->
+    <!-- ===================================================================== -->
+    <div id="focus-modal" class="modal-backdrop fixed inset-0 z-50 bg-[#07070c]/95 flex flex-col items-center justify-between p-6">
+        <!-- Верхняя панель модалки фокуса -->
+        <div class="w-full max-w-md flex items-center justify-between">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500/20 border border-indigo-400/35 text-white text-xs font-extrabold">
+                <span>▶</span><span>Режим фокуса</span>
+            </span>
+            <button onclick="closeFocusModal()" class="p-2.5 rounded-full bg-white/10 text-white hover:bg-white/20 active:scale-90 transition-transform" aria-label="Закрыть таймер">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Центр: Название задачи, выбор 5 / 15 / 25 мин и SVG-кольцо -->
+        <div class="w-full max-w-md flex flex-col items-center text-center my-auto">
+            <h3 id="focus-task-title" class="text-xl font-black text-white leading-snug mb-5 px-2 line-clamp-2">
+                Название задачи
+            </h3>
+
+            <!-- Переключатель 5, 15, 25 минут -->
+            <div class="flex items-center justify-center gap-2 mb-7">
+                <button type="button" data-min="5" onclick="setFocusMinutes(5)" class="focus-min-btn px-4 py-2 rounded-xl text-xs font-extrabold transition-transform active:scale-95">5 мин</button>
+                <button type="button" data-min="15" onclick="setFocusMinutes(15)" class="focus-min-btn px-4 py-2 rounded-xl text-xs font-extrabold transition-transform active:scale-95">15 мин</button>
+                <button type="button" data-min="25" onclick="setFocusMinutes(25)" class="focus-min-btn px-4 py-2 rounded-xl text-xs font-extrabold transition-transform active:scale-95">25 мин</button>
+            </div>
+
+            <!-- Большое SVG-кольцо таймера (120 FPS) -->
+            <div class="relative w-64 h-64 flex items-center justify-center mb-6">
+                <svg class="w-full h-full" viewBox="0 0 140 140">
+                    <circle cx="70" cy="70" r="60" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8"></circle>
+                    <circle id="focus-svg-ring" class="progress-ring-circle" cx="70" cy="70" r="60" fill="none" stroke="url(#focusRingGradient)" stroke-width="8" stroke-linecap="round" stroke-dasharray="376.99" stroke-dashoffset="0"></circle>
+                    <defs>
+                        <linearGradient id="focusRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#6366f1" />
+                            <stop offset="50%" stop-color="#a855f7" />
+                            <stop offset="100%" stop-color="#10b981" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span id="focus-timer-text" class="text-5xl font-black text-white tracking-tight tabular-nums">15:00</span>
+                    <span id="focus-timer-status" class="text-xs font-bold text-indigo-300 mt-1.5">Нажми Старт</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Низ: Кнопки управления и завершения -->
+        <div class="w-full max-w-md space-y-2.5">
+            <div class="grid grid-cols-2 gap-2.5">
+                <button id="focus-start-pause-btn" onclick="toggleFocusRun()" class="py-3.5 px-4 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white font-black text-sm active:scale-95 transition-transform">
+                    Старт
+                </button>
+                <button onclick="resetFocusRun()" class="py-3.5 px-4 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-bold text-sm active:scale-95 transition-transform">
+                    Сброс
+                </button>
+            </div>
+            <button onclick="finishFocusedTask()" class="w-full py-4 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-sm shadow-[0_8px_24px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2 active:scale-95 transition-transform">
+                <span>✓</span>
+                <span>Выполнено! Закрыть задачу</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- МОДАЛКА В: СТАТИСТИКА СЕРИИ ДНЕЙ (🔥 STREAK) ЗА 7 ДНЕЙ                -->
+    <!-- ===================================================================== -->
+    <div id="streak-modal" class="modal-backdrop fixed inset-0 z-50 bg-black/75 flex items-end justify-center" onclick="handleBackdropClick(event, 'streak-modal')">
+        <div class="bottom-sheet w-full max-w-lg bg-surface-900 rounded-t-3xl p-6 pb-9 border-t border-amber-400/25 shadow-2xl">
+            <div class="w-10 h-1 bg-white/25 rounded-full mx-auto mb-5"></div>
+
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/35 flex items-center justify-center text-2xl">
+                        🔥
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black text-white">Серия выполненных дней</h3>
+                        <p class="text-xs font-medium text-zinc-300">Закрывай хотя бы 1 задачу каждый день</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('streak-modal')" class="p-2 rounded-full bg-white/10 text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Текущий стрик и следующая цель -->
+            <div class="glass-card rounded-2xl p-4 mb-5 flex items-center justify-between bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent">
+                <div>
+                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-amber-200">Текущий Streak</span>
+                    <div class="flex items-baseline gap-2 mt-1">
+                        <span id="streak-modal-days" class="text-4xl font-black text-amber-300">0</span>
+                        <span id="streak-modal-word" class="text-sm font-bold text-white">дней подряд</span>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="block text-[11px] font-semibold text-zinc-300">Следующая цель</span>
+                    <span id="streak-next-goal" class="inline-block mt-1 px-2.5 py-1 rounded-xl bg-amber-400/20 border border-amber-300/35 text-xs font-black text-amber-200">
+                        3 дня 🔥
+                    </span>
+                </div>
+            </div>
+
+            <!-- Статистика за последние 7 дней -->
+            <div class="mb-4">
+                <div class="flex items-center justify-between mb-2.5">
+                    <span class="text-xs font-extrabold text-white">Последние 7 дней</span>
+                    <span id="streak-7d-summary" class="text-xs font-semibold text-emerald-300">0 из 7 активных</span>
+                </div>
+                <div id="streak-7days-grid" class="grid grid-cols-7 gap-2">
+                    <!-- Рендерится через JS -->
+                </div>
+            </div>
+
+            <p class="text-xs text-center text-white/90 bg-white/5 border border-white/10 rounded-2xl p-3 leading-relaxed">
+                Даже 1 закрытый микро-шаг (например, «Застелить кровать») продлевает серию. Главное — не разрывать цепочку!
+            </p>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- МОДАЛКА Г: ДОБАВЛЕНИЕ СВОЕЙ РУТИНЫ («+ СВОЯ»)                         -->
+    <!-- ===================================================================== -->
+    <div id="routine-modal" class="modal-backdrop fixed inset-0 z-50 bg-black/75 flex items-end justify-center" onclick="handleBackdropClick(event, 'routine-modal')">
+        <div class="bottom-sheet w-full max-w-lg bg-surface-900 rounded-t-3xl p-5 pb-8 border-t border-white/15 shadow-2xl">
+            <div class="w-10 h-1 bg-white/25 rounded-full mx-auto mb-4"></div>
+
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-black text-white">Своя рутина в 1 клик</h3>
+                <button onclick="closeModal('routine-modal')" class="p-2 rounded-full bg-white/10 text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <form onsubmit="handleSaveCustomRoutine(event)" class="space-y-3.5">
+                <div class="flex gap-2">
+                    <input type="text" id="routine-emoji-input" value="⚡" maxlength="2" class="w-14 text-center py-3 rounded-2xl bg-surface-800 text-xl border border-white/15 focus:outline-none focus:border-indigo-400">
+                    <input type="text" id="routine-name-input" placeholder="Например: Чтение 20 минут" required class="flex-1 px-4 py-3 rounded-2xl bg-surface-800 text-white placeholder-zinc-500 text-sm font-semibold border border-white/15 focus:outline-none focus:border-indigo-400">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <span class="block text-[11px] font-bold text-zinc-300 mb-1">Категория</span>
+                        <select id="routine-cat-input" class="w-full px-3 py-2.5 rounded-xl bg-surface-800 text-white text-sm font-semibold border border-white/15">
+                            <option value="Личное">Личное</option>
+                            <option value="Учёба">Учёба</option>
+                            <option value="Зал">Зал</option>
+                            <option value="Дела">Дела</option>
+                        </select>
+                    </div>
+                    <div>
+                        <span class="block text-[11px] font-bold text-zinc-300 mb-1">Время (или пусто)</span>
+                        <input type="time" id="routine-time-input" class="w-full px-3 py-2.5 rounded-xl bg-surface-800 text-white text-sm font-semibold border border-white/15">
+                    </div>
+                </div>
+
+                <label class="flex items-center justify-between p-3 rounded-2xl bg-surface-800 border border-white/10 cursor-pointer">
+                    <span class="text-xs font-bold text-white">🌱 Считать микро-шагом (низкий порог)</span>
+                    <input type="checkbox" id="routine-micro-input" checked class="w-5 h-5 rounded accent-emerald-500">
+                </label>
+
+                <button type="submit" class="w-full py-3.5 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white font-black text-sm active:scale-[0.98] transition-transform">
+                    Создать чипс рутины
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ВСПЛЫВАЮЩЕЕ УВЕДОМЛЕНИЕ (TOAST) -->
+    <div id="toast" style="will-change: transform, opacity;" class="fixed top-4 left-1/2 -translate-x-1/2 -translate-y-3 z-50 px-4 py-2.5 rounded-2xl glass-card text-white text-xs font-extrabold shadow-2xl border border-indigo-400/45 opacity-0 pointer-events-none transition-all duration-200 flex items-center gap-2">
+        <span id="toast-icon">✨</span>
+        <span id="toast-text">Готово</span>
+    </div>
+
+    <script>
+        /**
+         * =====================================================================
+         * 1. ИНИЦИАЛИЗАЦИЯ TELEGRAM WEBAPP SDK И ВИБРООТКЛИКА
+         * =====================================================================
+         */
+        const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        if (tg) {
+            try {
+                tg.ready();
+                tg.expand();
+                if (tg.setHeaderColor) tg.setHeaderColor('#07070c');
+                if (tg.setBackgroundColor) tg.setBackgroundColor('#07070c');
+            } catch (e) {
+                console.warn('Telegram WebApp init warning:', e);
+            }
+        }
+
+        function triggerHaptic(type = 'light') {
+            if (!tg || !tg.HapticFeedback) return;
+            try {
+                if (['success', 'warning', 'error'].includes(type)) {
+                    tg.HapticFeedback.notificationOccurred(type);
+                } else {
+                    tg.HapticFeedback.impactOccurred(type);
+                }
+            } catch (_) {}
+        }
+
+        /**
+         * =====================================================================
+         * 2. КОНСТАНТЫ, СОСТОЯНИЕ И LOCALSTORAGE
+         * =====================================================================
+         */
+        const STORAGE_TASKS = 'plan_pro_tasks_v1';
+        const STORAGE_ROUTINES = 'plan_pro_routines_v1';
+        const STORAGE_ENERGY = 'plan_pro_energy_v1';
+
+        const DAYS_SHORT = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+        const MONTHS_GEN = [
+            'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+            'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+        ];
+
+        // Категории с цветовой индикацией (Учёба, Зал, Дела, Личное)
+        const CATEGORY_META = {
+            'Учёба': {
+                dot: 'bg-violet-400',
+                bar: 'bg-violet-400',
+                badge: 'bg-violet-500/20 text-violet-200 border-violet-400/35'
+            },
+            'Зал': {
+                dot: 'bg-amber-400',
+                bar: 'bg-amber-400',
+                badge: 'bg-amber-500/20 text-amber-200 border-amber-400/35'
+            },
+            'Дела': {
+                dot: 'bg-sky-400',
+                bar: 'bg-sky-400',
+                badge: 'bg-sky-500/20 text-sky-200 border-sky-400/35'
+            },
+            'Личное': {
+                dot: 'bg-emerald-400',
+                bar: 'bg-emerald-400',
+                badge: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/35'
+            }
+        };
+
+        // Стартовые рутины в 1 клик
+        const DEFAULT_ROUTINES = [
+            { id: 'r_bed', emoji: '🛏', title: 'Застелить кровать', time: '09:00', category: 'Личное', isMicro: true },
+            { id: 'r_gym', emoji: '💪', title: 'Тренировка', time: '18:00', category: 'Зал', isMicro: false },
+            { id: 'r_study', emoji: '📚', title: 'Учёба 30 мин', time: '15:00', category: 'Учёба', isMicro: true },
+            { id: 'r_water', emoji: '💧', title: 'Выпить воды', time: '', category: 'Личное', isMicro: true }
+        ];
+
+        function getLocalDateStr(dateObj = new Date()) {
+            const y = dateObj.getFullYear();
+            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const d = String(dateObj.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function parseLocalDate(str) {
+            const [y, m, d] = str.split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+
+        let selectedDateStr = getLocalDateStr(new Date());
+        let selectedCategory = 'Дела';
+        let isNoTimeMode = false;
+        let currentEnergy = localStorage.getItem(STORAGE_ENERGY) || 'normal';
+
+        // Переменные фокус-таймера (120 FPS)
+        let focusTaskId = null;
+        let focusTotalSec = 15 * 60;
+        let focusRemainingSec = 15 * 60;
+        let focusEndTimestamp = 0;
+        let focusRafId = null;
+        let isFocusRunning = false;
+        let lastSecondShown = -1;
+
+        function loadTasksMap() {
+            try {
+                const raw = localStorage.getItem(STORAGE_TASKS);
+                return raw ? JSON.parse(raw) : {};
+            } catch (_) {
+                return {};
+            }
+        }
+
+        function saveTasksMap(map) {
+            localStorage.setItem(STORAGE_TASKS, JSON.stringify(map));
+        }
+
+        function loadRoutines() {
+            try {
+                const raw = localStorage.getItem(STORAGE_ROUTINES);
+                if (!raw) {
+                    localStorage.setItem(STORAGE_ROUTINES, JSON.stringify(DEFAULT_ROUTINES));
+                    return [...DEFAULT_ROUTINES];
+                }
+                return JSON.parse(raw);
+            } catch (_) {
+                return [...DEFAULT_ROUTINES];
+            }
+        }
+
+        function saveRoutines(list) {
+            localStorage.setItem(STORAGE_ROUTINES, JSON.stringify(list));
+        }
+
+        function seedDemoIfEmpty() {
+            const map = loadTasksMap();
+            if (Object.keys(map).length > 0) return;
+
+            const todayStr = getLocalDateStr(new Date());
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = getLocalDateStr(yesterday);
+
+            map[yesterdayStr] = [
+                {
+                    id: 'seed_y1',
+                    title: 'Застелить кровать',
+                    startTime: '09:00',
+                    endTime: '',
+                    noTime: false,
+                    category: 'Личное',
+                    isMicro: true,
+                    completed: true
+                }
+            ];
+
+            map[todayStr] = [
+                {
+                    id: 'seed_1',
+                    title: 'Застелить кровать и проветрить комнату',
+                    startTime: '09:00',
+                    endTime: '09:15',
+                    noTime: false,
+                    category: 'Личное',
+                    isMicro: true,
+                    completed: true
+                },
+                {
+                    id: 'seed_2',
+                    title: 'Учёба 30 мин — разобрать конспект',
+                    startTime: '15:00',
+                    endTime: '15:30',
+                    noTime: false,
+                    category: 'Учёба',
+                    isMicro: true,
+                    completed: false
+                },
+                {
+                    id: 'seed_3',
+                    title: 'Тренировка в зале',
+                    startTime: '18:30',
+                    endTime: '19:45',
+                    noTime: false,
+                    category: 'Зал',
+                    isMicro: false,
+                    completed: false
+                },
+                {
+                    id: 'seed_4',
+                    title: 'Выпить 2 стакана воды',
+                    startTime: '',
+                    endTime: '',
+                    noTime: true,
+                    category: 'Личное',
+                    isMicro: true,
+                    completed: false
+                }
+            ];
+            saveTasksMap(map);
+        }
+
+        /**
+         * =====================================================================
+         * 3. РАСЧЁТ СЕРИИ ДНЕЙ (🔥 STREAK) И СТАТИСТИКА ЗА 7 ДНЕЙ
+         * =====================================================================
+         */
+        function hasCompletedTaskOnDate(map, dateStr) {
+            const tasks = map[dateStr] || [];
+            return tasks.some(t => t.completed);
+        }
+
+        function calculateStreak() {
+            const map = loadTasksMap();
+            let streak = 0;
+            const cursor = new Date();
+            const todayStr = getLocalDateStr(cursor);
+
+            // Если сегодня ещё не закрыли задачу, проверяем со вчера, чтобы стрик не обнулялся до конца дня
+            if (!hasCompletedTaskOnDate(map, todayStr)) {
+                cursor.setDate(cursor.getDate() - 1);
+            }
+
+            while (true) {
+                const dStr = getLocalDateStr(cursor);
+                if (hasCompletedTaskOnDate(map, dStr)) {
+                    streak++;
+                    cursor.setDate(cursor.getDate() - 1);
+                } else {
+                    break;
+                }
+            }
+            return streak;
+        }
+
+        function getDayPlural(n) {
+            const mod10 = n % 10;
+            const mod100 = n % 100;
+            if (mod10 === 1 && mod100 !== 11) return 'день подряд';
+            if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'дня подряд';
+            return 'дней подряд';
+        }
+
+        function openStreakModal() {
+            const streak = calculateStreak();
+            const map = loadTasksMap();
+
+            document.getElementById('streak-modal-days').textContent = streak;
+            document.getElementById('streak-modal-word').textContent = getDayPlural(streak);
+
+            // Следующая цель
+            const milestones = [3, 7, 14, 21, 30, 60, 100];
+            const nextGoal = milestones.find(m => m > streak) || (streak + 10);
+            document.getElementById('streak-next-goal').textContent = `${nextGoal} дн. 🔥`;
+
+            // Сетка последних 7 дней
+            const grid = document.getElementById('streak-7days-grid');
+            const frag = document.createDocumentFragment();
+            let activeDaysCount = 0;
+
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dStr = getLocalDateStr(d);
+                const done = hasCompletedTaskOnDate(map, dStr);
+                if (done) activeDaysCount++;
+
+                const cell = document.createElement('div');
+                cell.className = `flex flex-col items-center p-2 rounded-2xl border ${
+                    done
+                        ? 'bg-amber-500/20 border-amber-400/50 text-white'
+                        : 'bg-surface-800 border-white/10 text-zinc-400'
+                }`;
+                cell.innerHTML = `
+                    <span class="text-[10px] font-bold text-white">${DAYS_SHORT[d.getDay()]}</span>
+                    <span class="text-base my-1 leading-none">${done ? '🔥' : '⚪'}</span>
+                    <span class="text-[10px] font-extrabold ${done ? 'text-amber-200' : 'text-zinc-400'}">${d.getDate()}</span>
+                `;
+                frag.appendChild(cell);
+            }
+
+            grid.innerHTML = '';
+            grid.appendChild(frag);
+            document.getElementById('streak-7d-summary').textContent = `${activeDaysCount} из 7 активных`;
+
+            document.getElementById('streak-modal').classList.add('active');
+            triggerHaptic('light');
+        }
+
+        /**
+         * =====================================================================
+         * 4. ЧЕК-ИН «РЕСУРС СЕЙЧАС»
+         * =====================================================================
+         */
+        function setEnergyLevel(level) {
+            currentEnergy = level;
+            localStorage.setItem(STORAGE_ENERGY, level);
+            renderEnergyUI();
+            renderTasksAndTimeline();
+            triggerHaptic('light');
+        }
+
+        function renderEnergyUI() {
+            const buttons = document.querySelectorAll('.energy-btn');
+            buttons.forEach(btn => {
+                const lvl = btn.dataset.energy;
+                const active = lvl === currentEnergy;
+                if (active) {
+                    if (lvl === 'high') {
+                        btn.className = 'energy-btn px-2.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1 bg-amber-500/25 text-white border border-amber-400/55 transition-transform active:scale-95 whitespace-nowrap';
+                    } else if (lvl === 'low') {
+                        btn.className = 'energy-btn px-2.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1 bg-emerald-500/25 text-white border border-emerald-400/55 transition-transform active:scale-95 whitespace-nowrap';
+                    } else {
+                        btn.className = 'energy-btn px-2.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1 bg-indigo-500/25 text-white border border-indigo-400/55 transition-transform active:scale-95 whitespace-nowrap';
+                    }
+                } else {
+                    btn.className = 'energy-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 bg-white/5 text-zinc-300 border border-transparent hover:text-white transition-transform active:scale-95 whitespace-nowrap';
+                }
+            });
+
+            const hint = document.getElementById('low-energy-hint');
+            if (currentEnergy === 'low') {
+                hint.classList.remove('hidden');
+            } else {
+                hint.classList.add('hidden');
+            }
+        }
+
+        /**
+         * =====================================================================
+         * 5. ШАПКА, КОНТРАСТНАЯ ЛЕНТА ДАТ (ВЧЕРА, СЕГОДНЯ, +10 ДНЕЙ) И ПРОГРЕСС
+         * =====================================================================
+         */
+        function renderHeaderAndDateStrip() {
+            const today = new Date();
+            const todayStr = getLocalDateStr(today);
+
+            const yesterday = new Date();
+            yesterday.setDate(today.getDate() - 1);
+            const yesterdayStr = getLocalDateStr(yesterday);
+
+            const tomorrow = new Date();
+            tomorrow.setDate(today.getDate() + 1);
+            const tomorrowStr = getLocalDateStr(tomorrow);
+
+            const selDate = parseLocalDate(selectedDateStr);
+            const dayNum = selDate.getDate();
+            const monthWord = MONTHS_GEN[selDate.getMonth()];
+            const weekWord = DAYS_SHORT[selDate.getDay()];
+
+            const mainTitle = document.getElementById('header-main-title');
+            const subDate = document.getElementById('header-date-sub');
+            const backTodayBtn = document.getElementById('btn-back-today');
+
+            document.getElementById('header-calendar-input').value = selectedDateStr;
+
+            // Ярко-белый заголовок выбранного дня
+            if (selectedDateStr === todayStr) {
+                mainTitle.textContent = 'Сегодня';
+                subDate.textContent = `${weekWord}, ${dayNum} ${monthWord}`;
+                backTodayBtn.classList.add('hidden');
+            } else if (selectedDateStr === tomorrowStr) {
+                mainTitle.textContent = 'Завтра';
+                subDate.textContent = `${weekWord}, ${dayNum} ${monthWord}`;
+                backTodayBtn.classList.remove('hidden');
+            } else if (selectedDateStr === yesterdayStr) {
+                mainTitle.textContent = 'Вчера';
+                subDate.textContent = `${weekWord}, ${dayNum} ${monthWord}`;
+                backTodayBtn.classList.remove('hidden');
+            } else {
+                mainTitle.textContent = `${dayNum} ${monthWord}`;
+                subDate.textContent = `${weekWord}, ${selDate.getFullYear()}`;
+                backTodayBtn.classList.remove('hidden');
+            }
+
+            // Обновляем счётчик стрика
+            document.getElementById('streak-count').textContent = calculateStreak();
+
+            // Строим ленту: Вчера (-1), Сегодня (0), Ближайшие 10 дней (+1 .. +10)
+            const strip = document.getElementById('date-strip');
+            const frag = document.createDocumentFragment();
+            const map = loadTasksMap();
+
+            for (let offset = -1; offset <= 10; offset++) {
+                const d = new Date();
+                d.setDate(d.getDate() + offset);
+                const dStr = getLocalDateStr(d);
+                const isSelected = dStr === selectedDateStr;
+                const isToday = dStr === todayStr;
+                const isTomorrow = dStr === tomorrowStr;
+                const isYesterday = dStr === yesterdayStr;
+
+                const tasks = map[dStr] || [];
+                const hasOpen = tasks.some(t => !t.completed);
+                const allDone = tasks.length > 0 && !hasOpen;
+
+                let topText = DAYS_SHORT[d.getDay()];
+                if (isToday) topText = 'Сегодня';
+                else if (isTomorrow) topText = 'Завтра';
+                else if (isYesterday) topText = 'Вчера';
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.onclick = () => selectDate(dStr);
+                btn.className = `flex-shrink-0 min-w-[3.7rem] px-2.5 h-16 rounded-2xl flex flex-col items-center justify-center transition-transform duration-150 active:scale-95 border ${
+                    isSelected
+                        ? 'bg-gradient-to-b from-indigo-500 to-violet-600 text-white border-indigo-300/80 shadow-[0_6px_18px_rgba(99,102,241,0.45)]'
+                        : 'glass-card text-white border-white/15 hover:border-white/30'
+                }`;
+
+                let statusDot = '<span class="w-1.5 h-1.5 rounded-full mt-1 opacity-0"></span>';
+                if (hasOpen) {
+                    statusDot = `<span class="w-1.5 h-1.5 rounded-full mt-1 ${isSelected ? 'bg-white' : 'bg-indigo-400'}"></span>`;
+                } else if (allDone) {
+                    statusDot = `<span class="w-1.5 h-1.5 rounded-full mt-1 ${isSelected ? 'bg-emerald-200' : 'bg-emerald-400'}"></span>`;
+                }
+
+                // Все подписи дней недели и чисел — чёткого белого цвета
+                btn.innerHTML = `
+                    <span class="text-[10.5px] font-extrabold text-white tracking-tight leading-none">
+                        ${topText}
+                    </span>
+                    <span class="text-base font-black text-white mt-1 leading-none">
+                        ${d.getDate()}
+                    </span>
+                    ${statusDot}
+                `;
+                frag.appendChild(btn);
+            }
+
+            strip.innerHTML = '';
+            strip.appendChild(frag);
+        }
+
+        function selectDate(dateStr) {
+            if (!dateStr) return;
+            selectedDateStr = dateStr;
+            renderHeaderAndDateStrip();
+            renderTasksAndTimeline();
+            triggerHaptic('light');
+        }
+
+        function selectToday() {
+            selectDate(getLocalDateStr(new Date()));
+        }
+
+        document.getElementById('header-calendar-input').addEventListener('change', (e) => {
+            if (e.target.value) {
+                selectDate(e.target.value);
+            }
+        });
+
+        function updateProgressRing(completed, total) {
+            const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
+            const circumference = 97.39; // 2 * PI * 15.5
+            const offset = circumference - (pct / 100) * circumference;
+
+            document.getElementById('header-progress-ring').style.strokeDashoffset = offset;
+            document.getElementById('header-progress-pct').textContent = `${pct}%`;
+            document.getElementById('tasks-summary-badge').textContent = `${completed} / ${total}`;
+
+            const clearBtn = document.getElementById('btn-clear-done');
+            if (completed > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+        }
+
+        /**
+         * =====================================================================
+         * 6. РУТИНЫ В 1 КЛИК
+         * =====================================================================
+         */
+        function renderRoutinesStrip() {
+            const routines = loadRoutines();
+            const strip = document.getElementById('routines-strip');
+            const frag = document.createDocumentFragment();
+
+            routines.forEach(r => {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.onclick = () => addRoutineTaskToDay(r);
+                chip.className = 'flex-shrink-0 glass-card px-3 py-2 rounded-2xl flex items-center gap-1.5 text-xs font-bold text-white border border-white/15 hover:border-indigo-400/50 active:scale-95 transition-transform';
+                chip.innerHTML = `
+                    <span class="text-sm leading-none">${escapeHtml(r.emoji)}</span>
+                    <span>${escapeHtml(r.title)}</span>
+                `;
+                frag.appendChild(chip);
+            });
+
+            // Кнопка "+ Своя"
+            const addBtn = document.createElement('button');
+            addBtn.type = 'button';
+            addBtn.onclick = openRoutineModal;
+            addBtn.className = 'flex-shrink-0 px-3 py-2 rounded-2xl bg-indigo-500/20 border border-indigo-400/45 text-xs font-extrabold text-white flex items-center gap-1 active:scale-95 transition-transform';
+            addBtn.innerHTML = `<span>+ Своя</span>`;
+            frag.appendChild(addBtn);
+
+            strip.innerHTML = '';
+            strip.appendChild(frag);
+        }
+
+        function addRoutineTaskToDay(routine) {
+            const map = loadTasksMap();
+            if (!map[selectedDateStr]) map[selectedDateStr] = [];
+
+            const hasTime = Boolean(routine.time && routine.time.trim());
+            map[selectedDateStr].push({
+                id: 'task_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                title: routine.title,
+                startTime: hasTime ? routine.time : '',
+                endTime: '',
+                noTime: !hasTime,
+                category: routine.category || 'Личное',
+                isMicro: Boolean(routine.isMicro),
+                completed: false
+            });
+
+            saveTasksMap(map);
+            renderHeaderAndDateStrip();
+            renderTasksAndTimeline();
+            triggerHaptic('medium');
+            showToast(`Добавлено: ${routine.title}`, routine.emoji);
+        }
+
+        function openRoutineModal() {
+            document.getElementById('routine-name-input').value = '';
+            document.getElementById('routine-emoji-input').value = '⚡';
+            document.getElementById('routine-time-input').value = '';
+            document.getElementById('routine-micro-input').checked = true;
+            document.getElementById('routine-modal').classList.add('active');
+            triggerHaptic('light');
+        }
+
+        function handleSaveCustomRoutine(e) {
+            e.preventDefault();
+            const title = document.getElementById('routine-name-input').value.trim();
+            if (!title) return;
+
+            const emoji = document.getElementById('routine-emoji-input').value.trim() || '⚡';
+            const category = document.getElementById('routine-cat-input').value;
+            const time = document.getElementById('routine-time-input').value;
+            const isMicro = document.getElementById('routine-micro-input').checked;
+
+            const routines = loadRoutines();
+            routines.push({
+                id: 'r_' + Date.now(),
+                emoji,
+                title,
+                time,
+                category,
+                isMicro
+            });
+            saveRoutines(routines);
+            renderRoutinesStrip();
+            closeModal('routine-modal');
+            triggerHaptic('success');
+            showToast('Рутина сохранена', emoji);
+        }
+
+        /**
+         * =====================================================================
+         * 7. РЕНДЕР ТАЙМЛАЙНА ДНЯ И КАРТОЧЕК ЗАДАЧ
+         * =====================================================================
+         */
+        function renderTasksAndTimeline() {
+            const map = loadTasksMap();
+            const dayTasks = map[selectedDateStr] || [];
+
+            const completedCount = dayTasks.filter(t => t.completed).length;
+            updateProgressRing(completedCount, dayTasks.length);
+
+            const timelineContainer = document.getElementById('timeline-container');
+            const untimedSection = document.getElementById('untimed-section');
+            const untimedList = document.getElementById('untimed-list');
+            const emptyState = document.getElementById('empty-state');
+
+            timelineContainer.innerHTML = '';
+            untimedList.innerHTML = '';
+
+            if (dayTasks.length === 0) {
+                untimedSection.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            emptyState.classList.remove('flex');
+
+            // Разделяем задачи со временем и без точного времени
+            const timedTasks = dayTasks
+                .filter(t => !t.noTime && t.startTime)
+                .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+            const untimedTasks = dayTasks.filter(t => t.noTime || !t.startTime);
+
+            // Рендерим таймлайн с вертикальной шкалой и красной линией "Сейчас"
+            if (timedTasks.length > 0) {
+                const isToday = selectedDateStr === getLocalDateStr(new Date());
+                const now = new Date();
+                const currentHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                let nowInserted = false;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative pl-4 space-y-3';
+
+                // Вертикальная линия шкалы времени
+                const verticalAxis = document.createElement('div');
+                verticalAxis.className = 'absolute left-[6px] top-3 bottom-3 w-[2px] bg-gradient-to-b from-indigo-500/60 via-violet-500/40 to-emerald-500/40 rounded-full';
+                wrapper.appendChild(verticalAxis);
+
+                timedTasks.forEach(task => {
+                    if (isToday && !nowInserted && task.startTime >= currentHHMM) {
+                        wrapper.appendChild(buildRedNowLine(currentHHMM));
+                        nowInserted = true;
+                    }
+                    wrapper.appendChild(buildTaskCard(task, true));
+                });
+
+                if (isToday && !nowInserted) {
+                    wrapper.appendChild(buildRedNowLine(currentHHMM));
+                }
+
+                timelineContainer.appendChild(wrapper);
+            }
+
+            // Рендерим блок задач без точного времени
+            if (untimedTasks.length > 0) {
+                untimedSection.classList.remove('hidden');
+                const frag = document.createDocumentFragment();
+                untimedTasks.forEach(task => {
+                    frag.appendChild(buildTaskCard(task, false));
+                });
+                untimedList.appendChild(frag);
+            } else {
+                untimedSection.classList.add('hidden');
+            }
+        }
+
+        // Красная линия "Сейчас" на текущем времени
+        function buildRedNowLine(hhmm) {
+            const row = document.createElement('div');
+            row.className = 'relative flex items-center gap-2 py-0.5 -ml-4';
+            row.innerHTML = `
+                <span class="w-3.5 h-3.5 rounded-full bg-rose-500 ring-4 ring-rose-500/25 flex-shrink-0 z-10"></span>
+                <span class="px-2 py-0.5 rounded-md bg-rose-500 text-white text-[10px] font-black tracking-wide uppercase shadow-[0_0_12px_rgba(244,63,94,0.6)]">
+                    Сейчас • ${hhmm}
+                </span>
+                <div class="flex-1 h-[2px] bg-gradient-to-r from-rose-500 to-rose-500/10 rounded-full"></div>
+            `;
+            return row;
+        }
+
+        function buildTaskCard(task, onTimeline) {
+            const cat = CATEGORY_META[task.category] || CATEGORY_META['Личное'];
+            const timeLabel = (!task.noTime && task.startTime)
+                ? (task.endTime ? `${task.startTime} – ${task.endTime}` : task.startTime)
+                : 'Без времени';
+
+            const highlightMicro = currentEnergy === 'low' && task.isMicro && !task.completed;
+
+            const card = document.createElement('div');
+            card.className = `relative glass-card rounded-2xl p-3.5 transition-transform duration-150 overflow-hidden ${
+                task.completed ? 'task-completed opacity-80' : ''
+            } ${highlightMicro ? 'micro-step-glow' : ''}`;
+
+            // Узел на вертикальной шкале таймлайна
+            const timelineDotHtml = onTimeline
+                ? `<span class="absolute -left-[15px] top-5 w-2.5 h-2.5 rounded-full ${task.completed ? 'bg-emerald-400' : cat.dot} ring-4 ring-[#07070c]"></span>`
+                : '';
+
+            card.innerHTML = `
+                ${timelineDotHtml}
+                <!-- Левая цветная полоска категории -->
+                <div class="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full ${cat.bar}"></div>
+
+                <div class="flex items-start gap-3 pl-1.5">
+                    <!-- Чекбокс с плавным зачёркиванием -->
+                    <button
+                        type="button"
+                        onclick="toggleTaskDone('${task.id}')"
+                        aria-label="Отметить выполненным"
+                        class="task-checkbox mt-0.5 w-6 h-6 rounded-full border-2 border-zinc-400 flex items-center justify-center flex-shrink-0 cursor-pointer"
+                    >
+                        <svg class="w-3.5 h-3.5 text-white ${task.completed ? 'opacity-100' : 'opacity-0'} transition-opacity" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </button>
+
+                    <!-- Контент карточки (клик открывает редактирование) -->
+                    <div onclick="openTaskModal('${task.id}')" class="flex-1 min-w-0 cursor-pointer">
+                        <p class="task-title text-[14.5px] font-bold text-white leading-snug break-words">
+                            ${escapeHtml(task.title)}
+                        </p>
+
+                        <div class="task-meta flex flex-wrap items-center gap-1.5 mt-2">
+                            <!-- Время -->
+                            <span class="inline-flex items-center gap-1 text-[11px] font-bold text-white bg-white/10 px-2 py-0.5 rounded-lg">
+                                <svg class="w-3 h-3 text-indigo-300" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                ${timeLabel}
+                            </span>
+
+                            <!-- Категория -->
+                            <span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-0.5 rounded-lg border ${cat.badge}">
+                                <span class="w-1.5 h-1.5 rounded-full ${cat.dot}"></span>
+                                ${escapeHtml(task.category || 'Личное')}
+                            </span>
+
+                            <!-- Бейдж микро-шага -->
+                            ${task.isMicro ? `
+                                <span class="inline-flex items-center gap-1 text-[10.5px] font-extrabold px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-200 border border-emerald-400/40">
+                                    🌱 Микро-шаг
+                                </span>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Кнопки "▶ Фокус" и Удаления -->
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                        ${!task.completed ? `
+                            <button
+                                type="button"
+                                onclick="openFocusModal('${task.id}')"
+                                class="px-2.5 py-1.5 rounded-xl bg-indigo-500/25 hover:bg-indigo-500/35 border border-indigo-400/45 text-white text-[11px] font-extrabold flex items-center gap-1 active:scale-95 transition-transform"
+                                title="Запустить Pomodoro-таймер"
+                            >
+                                <span>▶</span>
+                                <span>Фокус</span>
+                            </button>
+                        ` : ''}
+
+                        <button
+                            type="button"
+                            onclick="deleteTask('${task.id}')"
+                            aria-label="Удалить задачу"
+                            class="p-1.5 rounded-xl text-zinc-400 hover:text-rose-400 active:scale-90 transition-transform"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        function toggleTaskDone(taskId) {
+            const map = loadTasksMap();
+            const list = map[selectedDateStr] || [];
+            const task = list.find(t => t.id === taskId);
+            if (!task) return;
+
+            task.completed = !task.completed;
+            saveTasksMap(map);
+
+            renderHeaderAndDateStrip();
+            renderTasksAndTimeline();
+
+            if (task.completed) {
+                triggerHaptic('success');
+                const allCompleted = list.length > 0 && list.every(t => t.completed);
+                if (allCompleted) {
+                    launchConfetti();
+                    showToast('Все задачи дня закрыты! Красава!', '🎉');
+                } else {
+                    showToast('Задача выполнена +1 к серии', '🔥');
+                }
+            } else {
+                triggerHaptic('light');
+            }
+        }
+
+        function deleteTask(taskId) {
+            const map = loadTasksMap();
+            if (!map[selectedDateStr]) return;
+            map[selectedDateStr] = map[selectedDateStr].filter(t => t.id !== taskId);
+            saveTasksMap(map);
+            renderHeaderAndDateStrip();
+            renderTasksAndTimeline();
+            triggerHaptic('warning');
+            showToast('Задача удалена', '🗑');
+        }
+
+        function clearCompletedToday() {
+            const map = loadTasksMap();
+            if (!map[selectedDateStr]) return;
+            map[selectedDateStr] = map[selectedDateStr].filter(t => !t.completed);
+            saveTasksMap(map);
+            renderHeaderAndDateStrip();
+            renderTasksAndTimeline();
+            triggerHaptic('light');
+            showToast('Выполненные задачи убраны', '✨');
+        }
+
+        /**
+         * =====================================================================
+         * 8. МОДАЛКА ДОБАВЛЕНИЯ / РЕДАКТИРОВАНИЯ ЗАДАЧИ
+         * =====================================================================
+         */
+        function openTaskModal(editTaskId = null) {
+            const heading = document.getElementById('task-modal-heading');
+            const idInput = document.getElementById('task-id-input');
+            const titleInput = document.getElementById('task-title-input');
+            const startInput = document.getElementById('task-start-input');
+            const endInput = document.getElementById('task-end-input');
+            const microCheck = document.getElementById('task-micro-checkbox');
+
+            if (editTaskId) {
+                const map = loadTasksMap();
+                const task = (map[selectedDateStr] || []).find(t => t.id === editTaskId);
+                if (!task) return;
+
+                heading.textContent = 'Редактировать задачу';
+                idInput.value = task.id;
+                titleInput.value = task.title;
+                isNoTimeMode = Boolean(task.noTime || !task.startTime);
+                startInput.value = task.startTime || '10:00';
+                endInput.value = task.endTime || '';
+                microCheck.checked = Boolean(task.isMicro);
+                selectTaskCategory(task.category || 'Дела');
+            } else {
+                heading.textContent = 'Новая задача';
+                idInput.value = '';
+                titleInput.value = '';
+                isNoTimeMode = false;
+                startInput.value = '10:00';
+                endInput.value = '';
+                microCheck.checked = currentEnergy === 'low';
+                selectTaskCategory('Дела');
+            }
+
+            syncTimeModeUI();
+            document.getElementById('task-modal').classList.add('active');
+            triggerHaptic('light');
+            setTimeout(() => titleInput.focus(), 140);
+        }
+
+        function applyTimePreset(preset) {
+            if (preset === 'none') {
+                isNoTimeMode = true;
+            } else {
+                isNoTimeMode = false;
+                document.getElementById('task-start-input').value = preset;
+            }
+            syncTimeModeUI();
+            triggerHaptic('light');
+        }
+
+        function enableTimedMode() {
+            isNoTimeMode = false;
+            syncTimeModeUI();
+        }
+
+        function syncTimeModeUI() {
+            const grid = document.getElementById('time-inputs-grid');
+            const noTimeBtn = document.getElementById('preset-notime-btn');
+            if (isNoTimeMode) {
+                grid.classList.add('opacity-35', 'pointer-events-none');
+                noTimeBtn.className = 'time-preset-btn px-3 py-1.5 rounded-xl bg-indigo-500 text-xs font-extrabold text-white border border-indigo-300 transition-transform active:scale-95 whitespace-nowrap';
+            } else {
+                grid.classList.remove('opacity-35', 'pointer-events-none');
+                noTimeBtn.className = 'time-preset-btn px-3 py-1.5 rounded-xl bg-surface-800 text-xs font-bold text-white border border-white/10 transition-transform active:scale-95 whitespace-nowrap';
+            }
+        }
+
+        function selectTaskCategory(catName) {
+            selectedCategory = catName;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                const isSelected = btn.dataset.cat === catName;
+                btn.className = isSelected
+                    ? 'cat-btn py-2.5 px-3 rounded-xl text-xs font-extrabold border border-indigo-400 bg-indigo-500/25 text-white flex items-center justify-center gap-2 transition-transform active:scale-95'
+                    : 'cat-btn py-2.5 px-3 rounded-xl text-xs font-bold border border-white/10 bg-surface-800 text-zinc-300 flex items-center justify-center gap-2 transition-transform active:scale-95';
+            });
+        }
+
+        function handleSaveTask(e) {
+            e.preventDefault();
+            const title = document.getElementById('task-title-input').value.trim();
+            if (!title) return;
+
+            const editId = document.getElementById('task-id-input').value;
+            const startTime = isNoTimeMode ? '' : document.getElementById('task-start-input').value;
+            const endTime = isNoTimeMode ? '' : document.getElementById('task-end-input').value;
+            const isMicro = document.getElementById('task-micro-checkbox').checked;
+
+            const map = loadTasksMap();
+            if (!map[selectedDateStr]) map[selectedDateStr] = [];
+
+            if (editId) {
+                const idx = map[selectedDateStr].findIndex(t => t.id === editId);
+                if (idx !== -1) {
+                    map[selectedDateStr][idx] = {
+                        ...map[selectedDateStr][idx],
+                        title,
+                        startTime,
+                        endTime,
+                        noTime: isNoTimeMode || !startTime,
+                        category: selectedCategory,
+                        isMicro
+                    };
+                }
+            } else {
+                map[selectedDateStr].push({
+                    id: 'task_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                    title,
+                    startTime,
+                    endTime,
+                    noTime: isNoTimeMode || !startTime,
+                    category: selectedCategory,
+                    isMicro,
+                    completed: false
+                });
+            }
+
+            saveTasksMap(map);
+            closeModal('task-modal');
+            renderHeaderAndDateStrip();
+            renderTasksAndTimeline();
+            triggerHaptic('success');
+            showToast(editId ? 'Задача обновлена' : 'Задача добавлена в план', '✅');
+        }
+
+        /**
+         * =====================================================================
+         * 9. ПОЛНОЭКРАННЫЙ POMODORO ФОКУС-ТАЙМЕР (120 FPS REQUESTANIMATIONFRAME)
+         * =====================================================================
+         */
+        function openFocusModal(taskId) {
+            const map = loadTasksMap();
+            const task = (map[selectedDateStr] || []).find(t => t.id === taskId);
+            if (!task) return;
+
+            focusTaskId = taskId;
+            document.getElementById('focus-task-title').textContent = task.title;
+            setFocusMinutes(15);
+            document.getElementById('focus-modal').classList.add('active');
+            triggerHaptic('medium');
+        }
+
+        function closeFocusModal() {
+            stopFocusAnimation();
+            document.getElementById('focus-modal').classList.remove('active');
+        }
+
+        function setFocusMinutes(mins) {
+            stopFocusAnimation();
+            focusTotalSec = mins * 60;
+            focusRemainingSec = focusTotalSec;
+            lastSecondShown = -1;
+            document.getElementById('focus-timer-status').textContent = 'Нажми Старт';
+            renderFocusRingAndDigits(focusTotalSec);
+
+            document.querySelectorAll('.focus-min-btn').forEach(btn => {
+                const active = Number(btn.dataset.min) === mins;
+                btn.className = active
+                    ? 'focus-min-btn px-4 py-2 rounded-xl text-xs font-black bg-indigo-500 text-white border border-indigo-300 transition-transform active:scale-95'
+                    : 'focus-min-btn px-4 py-2 rounded-xl text-xs font-bold bg-white/10 text-white border border-white/10 hover:bg-white/15 transition-transform active:scale-95';
+            });
+        }
+
+        function toggleFocusRun() {
+            if (isFocusRunning) {
+                stopFocusAnimation();
+                document.getElementById('focus-timer-status').textContent = 'На паузе';
+                triggerHaptic('light');
+                return;
+            }
+
+            isFocusRunning = true;
+            focusEndTimestamp = performance.now() + focusRemainingSec * 1000;
+            document.getElementById('focus-start-pause-btn').textContent = 'Пауза';
+            document.getElementById('focus-timer-status').textContent = 'Сфокусируйся на задаче...';
+            triggerHaptic('medium');
+
+            const loop = (now) => {
+                if (!isFocusRunning) return;
+                const exactLeftSec = Math.max(0, (focusEndTimestamp - now) / 1000);
+                focusRemainingSec = Math.ceil(exactLeftSec);
+                renderFocusRingAndDigits(exactLeftSec);
+
+                if (exactLeftSec > 0) {
+                    focusRafId = requestAnimationFrame(loop);
+                } else {
+                    stopFocusAnimation();
+                    focusRemainingSec = 0;
+                    renderFocusRingAndDigits(0);
+                    document.getElementById('focus-timer-status').textContent = 'Время вышло!';
+                    triggerHaptic('success');
+                    launchConfetti();
+                    showToast('Фокус-сессия завершена!', '⏱');
+                }
+            };
+
+            focusRafId = requestAnimationFrame(loop);
+        }
+
+        function stopFocusAnimation() {
+            isFocusRunning = false;
+            if (focusRafId) {
+                cancelAnimationFrame(focusRafId);
+                focusRafId = null;
+            }
+            document.getElementById('focus-start-pause-btn').textContent = 'Старт';
+        }
+
+        function resetFocusRun() {
+            stopFocusAnimation();
+            focusRemainingSec = focusTotalSec;
+            lastSecondShown = -1;
+            document.getElementById('focus-timer-status').textContent = 'Нажми Старт';
+            renderFocusRingAndDigits(focusTotalSec);
+            triggerHaptic('light');
+        }
+
+        function renderFocusRingAndDigits(exactLeftSec) {
+            const whole = Math.ceil(exactLeftSec);
+            if (whole !== lastSecondShown) {
+                lastSecondShown = whole;
+                const m = Math.floor(whole / 60);
+                const s = whole % 60;
+                document.getElementById('focus-timer-text').textContent =
+                    `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            }
+
+            // Плавное SVG-кольцо на 120 FPS (r=60 => длина окружности 376.99)
+            const circumference = 376.99;
+            const ratio = focusTotalSec > 0 ? (exactLeftSec / focusTotalSec) : 0;
+            const offset = circumference * (1 - ratio);
+            document.getElementById('focus-svg-ring').style.strokeDashoffset = offset;
+        }
+
+        function finishFocusedTask() {
+            const idToComplete = focusTaskId;
+            closeFocusModal();
+            if (!idToComplete) return;
+
+            const map = loadTasksMap();
+            const list = map[selectedDateStr] || [];
+            const task = list.find(t => t.id === idToComplete);
+            if (task && !task.completed) {
+                task.completed = true;
+                saveTasksMap(map);
+                renderHeaderAndDateStrip();
+                renderTasksAndTimeline();
+                triggerHaptic('success');
+                launchConfetti();
+                showToast('Задача закрыта после фокуса!', '🎉');
+            }
+        }
+
+        /**
+         * =====================================================================
+         * 10. ПРАЗДНИЧНОЕ КОНФЕТТИ НА CANVAS (120 FPS С DELTA-TIME)
+         * =====================================================================
+         */
+        let confettiRaf = null;
+        function launchConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+            canvas.width = window.innerWidth * dpr;
+            canvas.height = window.innerHeight * dpr;
+            canvas.style.width = `${window.innerWidth}px`;
+            canvas.style.height = `${window.innerHeight}px`;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            if (confettiRaf) cancelAnimationFrame(confettiRaf);
+
+            const palette = ['#6366f1', '#a855f7', '#10b981', '#f59e0b', '#f43f5e', '#38bdf8'];
+            const pieces = Array.from({ length: 70 }, () => ({
+                x: window.innerWidth * (0.15 + Math.random() * 0.7),
+                y: window.innerHeight * 0.36,
+                vx: (Math.random() - 0.5) * 700,
+                vy: -Math.random() * 620 - 180,
+                w: Math.random() * 7 + 4,
+                h: Math.random() * 4 + 3,
+                color: palette[Math.floor(Math.random() * palette.length)],
+                angle: Math.random() * 360,
+                spin: (Math.random() - 0.5) * 760
+            }));
+
+            let prevTime = performance.now();
+            const startTime = prevTime;
+
+            function frame(now) {
+                const dt = Math.min((now - prevTime) / 1000, 0.05);
+                prevTime = now;
+
+                ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+                for (let i = 0; i < pieces.length; i++) {
+                    const p = pieces[i];
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.vy += 1200 * dt; // физика, независимая от герцовки экрана (60/90/120 Гц)
+                    p.angle += p.spin * dt;
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate((p.angle * Math.PI) / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                    ctx.restore();
+                }
+
+                if (now - startTime < 1700) {
+                    confettiRaf = requestAnimationFrame(frame);
+                } else {
+                    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+                    confettiRaf = null;
+                }
+            }
+
+            confettiRaf = requestAnimationFrame(frame);
+        }
+
+        /**
+         * =====================================================================
+         * 11. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ МОДАЛОК И УВЕДОМЛЕНИЙ
+         * =====================================================================
+         */
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function handleBackdropClick(e, id) {
+            if (e.target && e.target.id === id) {
+                closeModal(id);
+            }
+        }
+
+        let toastTimer = null;
+        function showToast(text, icon = '✨') {
+            const el = document.getElementById('toast');
+            document.getElementById('toast-text').textContent = text;
+            document.getElementById('toast-icon').textContent = icon;
+
+            el.classList.remove('opacity-0', '-translate-y-3');
+            el.classList.add('opacity-100', 'translate-y-0');
+
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                el.classList.add('opacity-0', '-translate-y-3');
+                el.classList.remove('opacity-100', 'translate-y-0');
+            }, 2200);
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // Обновляем положение красной линии "Сейчас" раз в минуту
+        setInterval(() => {
+            if (selectedDateStr === getLocalDateStr(new Date())) {
+                renderTasksAndTimeline();
+            }
+        }, 60000);
+
+        // Запуск приложения
+        seedDemoIfEmpty();
+        renderEnergyUI();
+        renderHeaderAndDateStrip();
+        renderRoutinesStrip();
+        renderTasksAndTimeline();
+    </script>
+</body>
+</html>
+```
