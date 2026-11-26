@@ -4,10 +4,12 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1" />
 <meta name="theme-color" content="#05050A" />
-<title>Aura 3.0</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>Aura 4.0</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-/* ===== ТЕМЫ ===== */
 :root {
   --bg: #05050A; --surface: rgba(255, 255, 255, 0.04); --surface-hover: rgba(255, 255, 255, 0.08);
   --border: rgba(255, 255, 255, 0.08); --text: #F2F4F8; --text-muted: #8A8D9D;
@@ -83,19 +85,16 @@ body {
 .task-card.done { opacity: 0.5; }
 .task-card.done .task-title { text-decoration: line-through; color: var(--text-muted); }
 
-/* Свайп */
 .task-inner {
   position: relative; z-index: 1; width: 100%; display: flex; align-items: flex-start; gap: 14px;
-  background: var(--surface); touch-action: pan-y; transition: transform 0.2s;
+  background: transparent; touch-action: pan-y; transition: transform 0.2s;
 }
 
-/* Сложность задач */
 .diff-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 7px; flex-shrink: 0; }
 .diff-1 { background: var(--success); box-shadow: 0 0 8px var(--success); }
 .diff-2 { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
 .diff-3 { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
 
-/* Если ресурс на нуле, сложные задачи тускнеют */
 .low-energy .task-card[data-diff="3"] { opacity: 0.4; filter: grayscale(0.5); }
 
 .task-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; margin-top: 2px; }
@@ -307,388 +306,392 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
 </div>
 
 <script>
-const tg = window.Telegram?.WebApp;
-tg?.ready(); tg?.expand(); tg?.setHeaderColor?.('#05050A');
+document.addEventListener('DOMContentLoaded', () => {
+  const tg = window.Telegram?.WebApp;
+  tg?.ready(); tg?.expand(); tg?.setHeaderColor?.('#05050A');
 
-const STORAGE_KEY = 'aura_mega_v2';
-const QUOTES = [
-  "Дисциплина — это выбор между тем, что хочешь сейчас, и тем, что хочешь больше всего.",
-  "Ты не обязан быть великим, чтобы начать. Начни, чтобы стать великим.",
-  "Маленькие шаги каждый день создают большие перемены.",
-  "Прогресс важнее совершенства.",
-  "Лучший день, чтобы начать, — сегодня.",
-  "Секрет движения вперёд — начать.",
-  "Ты сильнее, чем думаешь.",
-  "Не сравнивай себя с другими. Сравнивай с собой вчерашним.",
-  "Успех — это сумма маленьких усилий, повторяемых изо дня в день.",
-  "Отдых — это часть продуктивности, а не её отсутствие."
-];
+  const STORAGE_KEY = 'aura_mega_v4'; // Обновил версию, чтобы сбросить старый кеш
+  const QUOTES = [
+    "Дисциплина — это выбор между тем, что хочешь сейчас, и тем, что хочешь больше всего.",
+    "Ты не обязан быть великим, чтобы начать. Начни, чтобы стать великим.",
+    "Маленькие шаги каждый день создают большие перемены.",
+    "Прогресс важнее совершенства.",
+    "Лучший день, чтобы начать, — сегодня.",
+    "Секрет движения вперёд — начать.",
+    "Ты сильнее, чем думаешь.",
+    "Не сравнивай себя с другими. Сравнивай с собой вчерашним.",
+    "Успех — это сумма маленьких усилий, повторяемых изо дня в день.",
+    "Отдых — это часть продуктивности, а не её отсутствие."
+  ];
 
-const ADVICES = {
-  high: "🔥 <b>Ты на пике!</b> Отличное время сделать самую сложную задачу. Твой мозг сейчас работает лучше всего, не трать это на рутину.",
-  mid: "😐 <b>Средний ресурс.</b> Хорошо подойдёт для обычных задач. Если устал — сделай перерыв на 15 минут, выпей воды.",
-  low: "🪫 <b>На нуле...</b> Не геройствуй. Сложные задачи лучше перенести или сделать что-то совсем простое: уборка, вода, прогулка. Отдохни, иначе сгоришь."
-};
+  const ADVICES = {
+    high: "🔥 <b>Ты на пике!</b> Отличное время сделать самую сложную задачу. Твой мозг сейчас работает лучше всего, не трать это на рутину.",
+    mid: "😐 <b>Средний ресурс.</b> Хорошо подойдёт для обычных задач. Если устал — сделай перерыв на 15 минут, выпей воды.",
+    low: "🪫 <b>На нуле...</b> Не геройствуй. Сложные задачи лучше перенести или сделать что-то совсем простое: уборка, вода, прогулка. Отдохни, иначе сгоришь."
+  };
 
-let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
-  days: {}, diaries: {}, streak: 0, bestStreak: 0, lastStreakDate: null, theme: 'default', unlockedBadges: []
-};
-let activeDate = todayKey();
-let currentTaskToMove = null; // Для модалки переноса
-let swipeStartX = 0; let swipeCurrentCard = null; let swipeTaskId = null;
+  const BADGES = [
+    { id: 'streak3', icon: '🔥', name: '3 дня подряд', cond: s => s.streak >= 3 },
+    { id: 'streak7', icon: '🏆', name: 'Неделя силы', cond: s => s.streak >= 7 },
+    { id: 'task10', icon: '✅', name: '10 задач', cond: s => getTotalTasks(s) >= 10 },
+    { id: 'task50', icon: '💎', name: '50 задач', cond: s => getTotalTasks(s) >= 50 },
+    { id: 'early', icon: '🌅', name: 'Ранняя пташка', cond: s => hasEarlyTask(s) },
+    { id: 'diary', icon: '📝', name: 'Дневник', cond: s => Object.keys(s.diaries||{}).length >= 3 }
+  ];
 
-const save = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-const getDay = (k) => { if (!state.days[k]) state.days[k] = { tasks: [], energy: '' }; return state.days[k]; };
+  // Утилиты
+  const pad = n => String(n).padStart(2, '0');
+  const dateKey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const todayKey = () => dateKey(new Date());
 
-// Тема
-document.getElementById('themeBtn').onclick = () => {
-  const themes = ['default', 'emerald', 'sunset'];
-  let idx = themes.indexOf(state.theme || 'default');
-  state.theme = themes[(idx + 1) % themes.length];
-  document.documentElement.setAttribute('data-theme', state.theme === 'default' ? '' : state.theme);
-  save(); tg?.HapticFeedback?.impactOccurred('light');
-};
-if (state.theme && state.theme !== 'default') document.documentElement.setAttribute('data-theme', state.theme);
+  // Стейт
+  let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+    days: {}, diaries: {}, streak: 0, bestStreak: 0, lastStreakDate: null, theme: 'default', unlockedBadges: []
+  };
+  let activeDate = todayKey(); 
+  let currentTaskToMove = null;
+  let swipeStartX = 0; let swipeCurrentCard = null;
+  let selectedDiff = 1;
+  let selectedMood = '';
 
-function updateClock() {
-  const now = new Date();
-  document.getElementById('liveClock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  const days = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб']; const months = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
-  document.getElementById('dateLabel').textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
-}
-setInterval(updateClock, 1000); updateClock();
+  const save = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const getDay = (k) => { if (!state.days[k]) state.days[k] = { tasks: [], energy: '' }; return state.days[k]; };
 
-function render() {
-  renderDates();
-  renderEnergy();
-  renderTasks();
-  renderProgress();
-  checkBadges();
-  
-  // Цитата дня (меняется в зависимости от даты)
-  const qIdx = Math.floor(new Date().setHours(0,0,0,0) / 86400000) % QUOTES.length;
-  document.getElementById('quoteBox').textContent = `«${QUOTES[qIdx]}»`;
-}
+  // Тема
+  document.getElementById('themeBtn').onclick = () => {
+    const themes = ['default', 'emerald', 'sunset'];
+    let idx = themes.indexOf(state.theme || 'default');
+    state.theme = themes[(idx + 1) % themes.length];
+    document.documentElement.setAttribute('data-theme', state.theme === 'default' ? '' : state.theme);
+    save(); tg?.HapticFeedback?.impactOccurred('light');
+  };
+  if (state.theme && state.theme !== 'default') document.documentElement.setAttribute('data-theme', state.theme);
 
-function renderDates() {
-  const scroll = document.getElementById('dateScroll'); scroll.innerHTML = '';
-  const today = new Date();
-  for (let i = -1; i <= 5; i++) {
-    const d = new Date(today); d.setDate(today.getDate() + i);
-    const key = dateKey(d);
-    let name = ['ВС','ПН','ВТ','СР','ЧТ','ПТ','СБ'][d.getDay()];
-    if (i === -1) name = 'Вчера'; if (i === 0) name = 'Сегодня'; if (i === 1) name = 'Завтра';
-    const el = document.createElement('div');
-    el.className = 'date-chip' + (key === activeDate ? ' active' : '');
-    el.innerHTML = `<div class="d-name">${name}</div><div class="d-num">${d.getDate()}</div>`;
-    el.onclick = () => { activeDate = key; render(); tg?.HapticFeedback?.impactOccurred('light'); };
-    scroll.appendChild(el);
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('liveClock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const days = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб']; const months = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+    document.getElementById('dateLabel').textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
   }
-}
+  setInterval(updateClock, 1000); updateClock();
 
-function renderEnergy() {
-  const day = getDay(activeDate);
-  document.querySelectorAll('.energy-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.energy === day.energy));
-  
-  const adviceBox = document.getElementById('adviceBox');
-  if (day.energy && ADVICES[day.energy]) {
-    adviceBox.innerHTML = ADVICES[day.energy];
-    adviceBox.style.display = 'block';
-    // Если ресурс на нуле, добавляем класс, чтобы притушить сложные задачи
-    document.getElementById('screen-plan').classList.toggle('low-energy', day.energy === 'low');
-  } else {
-    adviceBox.style.display = 'none';
-    document.getElementById('screen-plan').classList.remove('low-energy');
-  }
-}
-
-function renderTasks() {
-  const day = getDay(activeDate);
-  const container = document.getElementById('taskContainer');
-  container.innerHTML = '';
-  const doneCount = day.tasks.filter(t => t.done).length;
-  document.getElementById('taskCount').textContent = `${doneCount} / ${day.tasks.length}`;
-
-  const pct = day.tasks.length ? Math.round((doneCount / day.tasks.length) * 100) : 0;
-  document.getElementById('ringText').textContent = pct + '%';
-  document.getElementById('ringProgress').style.strokeDashoffset = 157 - (pct / 100) * 157;
-
-  if (!day.tasks.length) {
-    container.innerHTML = `<div class="empty"><div class="icon">🌌</div><h3>Здесь пока пусто</h3><p>Нажми на плюс, чтобы добавить планы</p></div>`;
-    return;
-  }
-
-  const sorted = [...day.tasks].sort((a, b) => (a.timeStart || '99:99').localeCompare(b.timeStart || '99:99'));
-  const now = new Date(); const curTime = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  const isToday = activeDate === todayKey();
-  const list = document.createElement('div'); list.className = 'task-list';
-
-  sorted.forEach(t => {
-    const card = document.createElement('div');
-    let diff = t.diff || 1; // Дефолтная сложность 1
-    card.className = 'task-card' + (t.done ? ' done' : '');
-    card.dataset.diff = diff;
+  function render() {
+    renderDates();
+    renderEnergy();
+    renderTasks();
+    renderProgress();
+    checkBadges();
     
-    let timeHtml = '', statusClass = '';
-    if (t.timeStart) {
-      const timeStr = t.timeEnd ? `${t.timeStart} — ${t.timeEnd}` : `с ${t.timeStart}`;
-      timeHtml = `<div class="task-time">🕒 ${timeStr}</div>`;
-      if (isToday && !t.done) {
-        if (t.timeEnd && curTime > t.timeEnd) statusClass = ' is-overdue';
-        else if (curTime >= t.timeStart && (!t.timeEnd || curTime <= t.timeEnd)) statusClass = ' is-now';
-      }
-    }
-    card.className += statusClass;
-
-    card.innerHTML = `
-      <div class="task-inner">
-        <div class="diff-dot diff-${diff}"></div>
-        <div class="task-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
-        <div class="task-content">
-          <div class="task-title">${t.text}</div>
-          ${timeHtml}
-        </div>
-        <button class="task-del">×</button>
-      </div>
-    `;
-
-    const inner = card.querySelector('.task-inner');
-
-    card.querySelector('.task-check').onclick = (e) => {
-      e.stopPropagation(); t.done = !t.done;
-      if (t.done) { checkStreak(); tg?.HapticFeedback?.notificationOccurred('success'); if(day.tasks.every(x=>x.done)) fireConfetti(); }
-      save(); render();
-    };
-
-    card.querySelector('.task-del').onclick = (e) => {
-      e.stopPropagation(); day.tasks = day.tasks.filter(x => x.id !== t.id); save(); render();
-    };
-
-    inner.onclick = (e) => {
-      if (e.target.classList.contains('task-check') || e.target.classList.contains('task-del')) return;
-      if (t.done) return;
-      startFocus(t.text);
-    };
-
-    // Свайп
-    inner.addEventListener('touchstart', e => {
-      swipeStartX = e.touches[0].clientX; swipeCurrentCard = inner; swipeTaskId = t.id; inner.style.transition = 'none';
-    });
-    inner.addEventListener('touchmove', e => {
-      if (!swipeCurrentCard) return;
-      const dx = e.touches[0].clientX - swipeStartX;
-      if (dx > 0) swipeCurrentCard.style.transform = `translateX(${dx}px)`;
-    });
-    inner.addEventListener('touchend', e => {
-      if (!swipeCurrentCard) return;
-      const dx = e.changedTouches[0].clientX - swipeStartX;
-      swipeCurrentCard.style.transition = 'transform 0.2s';
-      
-      if (dx > 80) {
-        swipeCurrentCard.style.transform = `translateX(100%)`;
-        setTimeout(() => {
-          currentTaskToMove = t; // Запоминаем задачу
-          document.getElementById('modalMove').classList.add('open');
-          document.getElementById('moveTimeStart').value = t.timeStart || '';
-          document.getElementById('moveTimeEnd').value = t.timeEnd || '';
-          // Возвращаем карточку на место, чтобы не пропала, если юзер нажмет "Отмена"
-          swipeCurrentCard.style.transform = `translateX(0)`;
-        }, 200);
-      } else {
-        swipeCurrentCard.style.transform = `translateX(0)`;
-      }
-      swipeCurrentCard = null;
-    });
-
-    list.appendChild(card);
-  });
-
-  container.appendChild(list);
-}
-
-function renderProgress() {
-  const chart = document.getElementById('chart'); chart.innerHTML = '';
-  const today = new Date(); const days = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'];
-  let maxTasks = 1; const data = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(today); d.setDate(today.getDate() - i);
-    const key = dateKey(d); const done = state.days[key] ? state.days[key].tasks.filter(t=>t.done).length : 0;
-    if (done > maxTasks) maxTasks = done;
-    data.push({ day: days[(d.getDay()+6)%7], val: done });
+    const qIdx = Math.floor(new Date().setHours(0,0,0,0) / 86400000) % QUOTES.length;
+    document.getElementById('quoteBox').textContent = `«${QUOTES[qIdx]}»`;
   }
-  data.forEach(item => {
-    const h = (item.val / maxTasks) * 100;
-    chart.innerHTML += `<div class="bar-wrap"><div class="bar"><div class="bar-fill" style="height:${h}%"></div></div><div class="bar-label">${item.day}</div></div>`;
-  });
 
-  const diaryList = document.getElementById('diaryList'); diaryList.innerHTML = '';
-  const diaries = Object.entries(state.diaries || {}).sort((a,b) => b[0].localeCompare(a[0])).slice(0, 5);
-  if (!diaries.length) diaryList.innerHTML = '<div style="font-size:14px; color:var(--text-muted);">Пока нет записей</div>';
-  diaries.forEach(([k, v]) => {
-    diaryList.innerHTML += `<div class="diary-card"><div class="diary-head"><div class="diary-date">${k.split('-').reverse().join('.')}</div><div class="diary-mood">${v.mood}</div></div>${v.text ? `<div class="diary-text">${v.text}</div>` : ''}</div>`;
-  });
-
-  const badgesGrid = document.getElementById('badgesGrid'); badgesGrid.innerHTML = '';
-  BADGES.forEach(b => {
-    const unlocked = state.unlockedBadges.includes(b.id);
-    badgesGrid.innerHTML += `<div class="badge ${unlocked ? 'unlocked' : ''}"><div class="badge-icon">${b.icon}</div><div class="badge-name">${b.name}</div></div>`;
-  });
-}
-
-const BADGES = [
-  { id: 'streak3', icon: '🔥', name: '3 дня подряд', cond: s => s.streak >= 3 },
-  { id: 'streak7', icon: '🏆', name: 'Неделя силы', cond: s => s.streak >= 7 },
-  { id: 'task10', icon: '✅', name: '10 задач', cond: s => getTotalTasks(s) >= 10 },
-  { id: 'task50', icon: '💎', name: '50 задач', cond: s => getTotalTasks(s) >= 50 },
-  { id: 'early', icon: '🌅', name: 'Ранняя пташка', cond: s => hasEarlyTask(s) },
-  { id: 'diary', icon: '📝', name: 'Дневник', cond: s => Object.keys(s.diaries||{}).length >= 3 }
-];
-
-function getTotalTasks(s) { let c = 0; Object.values(s.days).forEach(d => c += d.tasks.filter(t=>t.done).length); return c; }
-function hasEarlyTask(s) { for (let k in s.days) { if (s.days[k].tasks.some(t => t.done && t.timeStart && t.timeStart < '08:00')) return true; } return false; }
-
-function checkBadges() {
-  BADGES.forEach(b => {
-    if (!state.unlockedBadges.includes(b.id) && b.cond(state)) {
-      state.unlockedBadges.push(b.id); fireConfetti(); setTimeout(() => alert(`🏆 Достижение: ${b.name}!`), 300);
+  function renderDates() {
+    const scroll = document.getElementById('dateScroll'); scroll.innerHTML = '';
+    const today = new Date();
+    for (let i = -1; i <= 5; i++) {
+      const d = new Date(today); d.setDate(today.getDate() + i);
+      const key = dateKey(d);
+      let name = ['ВС','ПН','ВТ','СР','ЧТ','ПТ','СБ'][d.getDay()];
+      if (i === -1) name = 'Вчера'; if (i === 0) name = 'Сегодня'; if (i === 1) name = 'Завтра';
+      const el = document.createElement('div');
+      el.className = 'date-chip' + (key === activeDate ? ' active' : '');
+      el.innerHTML = `<div class="d-name">${name}</div><div class="d-num">${d.getDate()}</div>`;
+      el.onclick = () => { activeDate = key; render(); tg?.HapticFeedback?.impactOccurred('light'); };
+      scroll.appendChild(el);
     }
-  });
-  save();
-}
-
-function checkStreak() {
-  if (state.lastStreakDate !== todayKey()) {
-    const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-    state.streak = (state.lastStreakDate === dateKey(yesterday)) ? state.streak + 1 : 1;
-    state.lastStreakDate = todayKey();
-    if (state.streak > state.bestStreak) state.bestStreak = state.streak;
   }
-}
 
-// Выбор сложности
-let selectedDiff = 1;
-document.querySelectorAll('.diff-opt').forEach(opt => {
-  opt.onclick = () => {
-    document.querySelectorAll('.diff-opt').forEach(o => o.classList.remove('active'));
-    opt.classList.add('active');
-    selectedDiff = parseInt(opt.dataset.val);
-  };
-});
-
-// Модалки
-document.getElementById('fabAdd').onclick = () => {
-  document.getElementById('taskInput').value = '';
-  document.getElementById('timeStart').value = '';
-  document.getElementById('timeEnd').value = '';
-  document.querySelectorAll('.diff-opt').forEach(o => o.classList.remove('active'));
-  document.querySelector('.diff-opt[data-val="1"]').classList.add('active');
-  selectedDiff = 1;
-  document.getElementById('modalAdd').classList.add('open');
-};
-
-document.getElementById('modalSave').onclick = () => {
-  const text = document.getElementById('taskInput').value.trim(); if (!text) return;
-  getDay(activeDate).tasks.push({
-    id: Date.now().toString(), text, diff: selectedDiff,
-    timeStart: document.getElementById('timeStart').value || null,
-    timeEnd: document.getElementById('timeEnd').value || null, done: false
-  });
-  save(); render(); document.getElementById('modalAdd').classList.remove('open'); tg?.HapticFeedback?.notificationOccurred('success');
-};
-
-// Сохранение переноса
-document.getElementById('modalMoveSave').onclick = () => {
-  if (!currentTaskToMove) return;
-  const day = getDay(activeDate);
-  const tomorrow = new Date(activeDate + 'T00:00:00');
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tKey = dateKey(tomorrow);
-  
-  // Обновляем время, если изменили
-  currentTaskToMove.timeStart = document.getElementById('moveTimeStart').value || null;
-  currentTaskToMove.timeEnd = document.getElementById('moveTimeEnd').value || null;
-
-  // Удаляем из текущего, добавляем в завтра
-  day.tasks = day.tasks.filter(x => x.id !== currentTaskToMove.id);
-  getDay(tKey).tasks.push(currentTaskToMove);
-  
-  save(); render(); document.getElementById('modalMove').classList.remove('open'); tg?.HapticFeedback?.notificationOccurred('success');
-};
-
-// Рефлексия
-document.getElementById('chart').onclick = () => {
-  document.getElementById('modalMood').classList.add('open');
-  document.querySelectorAll('.mood-opt').forEach(o => o.classList.remove('active'));
-  selectedMood = ''; document.getElementById('moodText').value = '';
-};
-document.querySelectorAll('.mood-opt').forEach(opt => {
-  opt.onclick = () => { document.querySelectorAll('.mood-opt').forEach(o => o.classList.remove('active')); opt.classList.add('active'); selectedMood = opt.dataset.mood; };
-});
-document.getElementById('modalMoodSave').onclick = () => {
-  if (!selectedMood) return;
-  if (!state.diaries) state.diaries = {};
-  state.diaries[todayKey()] = { mood: selectedMood, text: document.getElementById('moodText').value };
-  save(); render(); document.getElementById('modalMood').classList.remove('open'); fireConfetti();
-};
-
-// Навигация
-document.querySelectorAll('.nav-btn').forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
-    if (btn.dataset.target === 'progress') {
-      document.getElementById('screen-plan').classList.add('hidden');
-      document.getElementById('screen-progress').classList.remove('hidden');
-      document.getElementById('fabAdd').classList.add('hidden');
-      renderProgress();
+  function renderEnergy() {
+    const day = getDay(activeDate);
+    document.querySelectorAll('.energy-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.energy === day.energy));
+    
+    const adviceBox = document.getElementById('adviceBox');
+    if (day.energy && ADVICES[day.energy]) {
+      adviceBox.innerHTML = ADVICES[day.energy];
+      adviceBox.style.display = 'block';
+      document.getElementById('screen-plan').classList.toggle('low-energy', day.energy === 'low');
     } else {
-      document.getElementById('screen-progress').classList.add('hidden');
-      document.getElementById('screen-plan').classList.remove('hidden');
-      document.getElementById('fabAdd').classList.remove('hidden');
+      adviceBox.style.display = 'none';
+      document.getElementById('screen-plan').classList.remove('low-energy');
     }
-  };
-});
-
-// Фокус таймер
-let focusInterval, focusTimeLeft = 25 * 60;
-function startFocus(taskName) {
-  document.getElementById('focusTaskName').textContent = taskName;
-  document.getElementById('focusOverlay').classList.add('open');
-  focusTimeLeft = 25 * 60; updateFocusTimer(); clearInterval(focusInterval);
-  focusInterval = setInterval(() => {
-    focusTimeLeft--; updateFocusTimer();
-    if (focusTimeLeft <= 0) {
-      clearInterval(focusInterval); tg?.HapticFeedback?.notificationOccurred('success'); fireConfetti();
-      document.getElementById('focusOverlay').classList.remove('open'); alert('Фокус завершен! 25 минут прошли.');
-    }
-  }, 1000);
-}
-function updateFocusTimer() { document.getElementById('focusTime').textContent = `${pad(Math.floor(focusTimeLeft/60))}:${pad(focusTimeLeft%60)}`; }
-document.getElementById('focusStop').onclick = () => { clearInterval(focusInterval); document.getElementById('focusOverlay').classList.remove('open'); };
-
-// Конфетти
-const canvas = document.getElementById('confetti'); const ctx = canvas.getContext('2d'); let particles = [];
-function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-window.addEventListener('resize', resizeCanvas); resizeCanvas();
-function fireConfetti() {
-  const colors = ['#7C3AED', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
-  for (let i = 0; i < 50; i++) {
-    particles.push({ x: window.innerWidth / 2, y: window.innerHeight / 2, vx: (Math.random() - 0.5) * 15, vy: (Math.random() - 0.5) * 15 - 5, color: colors[Math.floor(Math.random() * colors.length)], size: Math.random() * 6 + 4, life: 1 });
   }
-  if (particles.length === 50) requestAnimationFrame(updateConfetti);
-}
-function updateConfetti() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  particles.forEach(p => {
-    p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.life -= 0.015;
-    ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.color;
-    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
-  });
-  particles = particles.filter(p => p.life > 0);
-  if (particles.length > 0) requestAnimationFrame(updateConfetti);
-  else ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
 
-render();
+  function renderTasks() {
+    const day = getDay(activeDate);
+    const container = document.getElementById('taskContainer');
+    container.innerHTML = '';
+    const doneCount = day.tasks.filter(t => t.done).length;
+    document.getElementById('taskCount').textContent = `${doneCount} / ${day.tasks.length}`;
+
+    const pct = day.tasks.length ? Math.round((doneCount / day.tasks.length) * 100) : 0;
+    document.getElementById('ringText').textContent = pct + '%';
+    document.getElementById('ringProgress').style.strokeDashoffset = 157 - (pct / 100) * 157;
+
+    if (!day.tasks.length) {
+      container.innerHTML = `<div class="empty"><div class="icon">🌌</div><h3>Здесь пока пусто</h3><p>Нажми на плюс, чтобы добавить планы</p></div>`;
+      return;
+    }
+
+    const sorted = [...day.tasks].sort((a, b) => (a.timeStart || '99:99').localeCompare(b.timeStart || '99:99'));
+    const now = new Date(); const curTime = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const isToday = activeDate === todayKey();
+    const list = document.createElement('div'); list.className = 'task-list';
+
+    sorted.forEach(t => {
+      const card = document.createElement('div');
+      let diff = t.diff || 1;
+      card.className = 'task-card' + (t.done ? ' done' : '');
+      card.dataset.diff = diff;
+      
+      let timeHtml = '', statusClass = '';
+      if (t.timeStart) {
+        const timeStr = t.timeEnd ? `${t.timeStart} — ${t.timeEnd}` : `с ${t.timeStart}`;
+        timeHtml = `<div class="task-time">🕒 ${timeStr}</div>`;
+        if (isToday && !t.done) {
+          if (t.timeEnd && curTime > t.timeEnd) statusClass = ' is-overdue';
+          else if (curTime >= t.timeStart && (!t.timeEnd || curTime <= t.timeEnd)) statusClass = ' is-now';
+        }
+      }
+      card.className += statusClass;
+
+      card.innerHTML = `
+        <div class="task-inner">
+          <div class="diff-dot diff-${diff}"></div>
+          <div class="task-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <div class="task-content">
+            <div class="task-title">${t.text}</div>
+            ${timeHtml}
+          </div>
+          <button class="task-del">×</button>
+        </div>
+      `;
+
+      const inner = card.querySelector('.task-inner');
+
+      card.querySelector('.task-check').onclick = (e) => {
+        e.stopPropagation(); t.done = !t.done;
+        if (t.done) { checkStreak(); tg?.HapticFeedback?.notificationOccurred('success'); if(day.tasks.every(x=>x.done)) fireConfetti(); }
+        save(); render();
+      };
+
+      card.querySelector('.task-del').onclick = (e) => {
+        e.stopPropagation(); day.tasks = day.tasks.filter(x => x.id !== t.id); save(); render();
+      };
+
+      inner.onclick = (e) => {
+        if (e.target.classList.contains('task-check') || e.target.classList.contains('task-del')) return;
+        if (t.done) return;
+        startFocus(t.text);
+      };
+
+      // Свайп
+      inner.addEventListener('touchstart', e => {
+        swipeStartX = e.touches[0].clientX; swipeCurrentCard = inner; inner.style.transition = 'none';
+      });
+      inner.addEventListener('touchmove', e => {
+        if (!swipeCurrentCard) return;
+        const dx = e.touches[0].clientX - swipeStartX;
+        if (dx > 0) swipeCurrentCard.style.transform = `translateX(${dx}px)`;
+      });
+      inner.addEventListener('touchend', e => {
+        if (!swipeCurrentCard) return;
+        const dx = e.changedTouches[0].clientX - swipeStartX;
+        swipeCurrentCard.style.transition = 'transform 0.2s';
+        
+        if (dx > 80) {
+          swipeCurrentCard.style.transform = `translateX(100%)`;
+          setTimeout(() => {
+            currentTaskToMove = t;
+            document.getElementById('modalMove').classList.add('open');
+            document.getElementById('moveTimeStart').value = t.timeStart || '';
+            document.getElementById('moveTimeEnd').value = t.timeEnd || '';
+            swipeCurrentCard.style.transform = `translateX(0)`;
+          }, 200);
+        } else {
+          swipeCurrentCard.style.transform = `translateX(0)`;
+        }
+        swipeCurrentCard = null;
+      });
+
+      list.appendChild(card);
+    });
+
+    container.appendChild(list);
+  }
+
+  function renderProgress() {
+    const chart = document.getElementById('chart'); chart.innerHTML = '';
+    const today = new Date(); const days = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'];
+    let maxTasks = 1; const data = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today); d.setDate(today.getDate() - i);
+      const key = dateKey(d); const done = state.days[key] ? state.days[key].tasks.filter(t=>t.done).length : 0;
+      if (done > maxTasks) maxTasks = done;
+      data.push({ day: days[(d.getDay()+6)%7], val: done });
+    }
+    data.forEach(item => {
+      const h = (item.val / maxTasks) * 100;
+      chart.innerHTML += `<div class="bar-wrap"><div class="bar"><div class="bar-fill" style="height:${h}%"></div></div><div class="bar-label">${item.day}</div></div>`;
+    });
+
+    const diaryList = document.getElementById('diaryList'); diaryList.innerHTML = '';
+    const diaries = Object.entries(state.diaries || {}).sort((a,b) => b[0].localeCompare(a[0])).slice(0, 5);
+    if (!diaries.length) diaryList.innerHTML = '<div style="font-size:14px; color:var(--text-muted);">Пока нет записей</div>';
+    diaries.forEach(([k, v]) => {
+      diaryList.innerHTML += `<div class="diary-card"><div class="diary-head"><div class="diary-date">${k.split('-').reverse().join('.')}</div><div class="diary-mood">${v.mood}</div></div>${v.text ? `<div class="diary-text">${v.text}</div>` : ''}</div>`;
+    });
+
+    const badgesGrid = document.getElementById('badgesGrid'); badgesGrid.innerHTML = '';
+    BADGES.forEach(b => {
+      const unlocked = state.unlockedBadges.includes(b.id);
+      badgesGrid.innerHTML += `<div class="badge ${unlocked ? 'unlocked' : ''}"><div class="badge-icon">${b.icon}</div><div class="badge-name">${b.name}</div></div>`;
+    });
+  }
+
+  function getTotalTasks(s) { let c = 0; Object.values(s.days).forEach(d => c += d.tasks.filter(t=>t.done).length); return c; }
+  function hasEarlyTask(s) { for (let k in s.days) { if (s.days[k].tasks.some(t => t.done && t.timeStart && t.timeStart < '08:00')) return true; } return false; }
+
+  function checkBadges() {
+    BADGES.forEach(b => {
+      if (!state.unlockedBadges.includes(b.id) && b.cond(state)) {
+        state.unlockedBadges.push(b.id); fireConfetti(); setTimeout(() => alert(`🏆 Достижение: ${b.name}!`), 300);
+      }
+    });
+    save();
+  }
+
+  function checkStreak() {
+    if (state.lastStreakDate !== todayKey()) {
+      const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+      state.streak = (state.lastStreakDate === dateKey(yesterday)) ? state.streak + 1 : 1;
+      state.lastStreakDate = todayKey();
+      if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+    }
+  }
+
+  // Выбор сложности
+  document.querySelectorAll('.diff-opt').forEach(opt => {
+    opt.onclick = () => {
+      document.querySelectorAll('.diff-opt').forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      selectedDiff = parseInt(opt.dataset.val);
+    };
+  });
+
+  // Модалки
+  document.getElementById('fabAdd').onclick = () => {
+    document.getElementById('taskInput').value = '';
+    document.getElementById('timeStart').value = '';
+    document.getElementById('timeEnd').value = '';
+    document.querySelectorAll('.diff-opt').forEach(o => o.classList.remove('active'));
+    document.querySelector('.diff-opt[data-val="1"]').classList.add('active');
+    selectedDiff = 1;
+    document.getElementById('modalAdd').classList.add('open');
+  };
+
+  document.getElementById('modalSave').onclick = () => {
+    const text = document.getElementById('taskInput').value.trim(); if (!text) return;
+    getDay(activeDate).tasks.push({
+      id: Date.now().toString(), text, diff: selectedDiff,
+      timeStart: document.getElementById('timeStart').value || null,
+      timeEnd: document.getElementById('timeEnd').value || null, done: false
+    });
+    save(); render(); document.getElementById('modalAdd').classList.remove('open'); tg?.HapticFeedback?.notificationOccurred('success');
+  };
+
+  // Сохранение переноса
+  document.getElementById('modalMoveSave').onclick = () => {
+    if (!currentTaskToMove) return;
+    const day = getDay(activeDate);
+    const tomorrow = new Date(activeDate + 'T00:00:00');
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tKey = dateKey(tomorrow);
+    
+    currentTaskToMove.timeStart = document.getElementById('moveTimeStart').value || null;
+    currentTaskToMove.timeEnd = document.getElementById('moveTimeEnd').value || null;
+
+    day.tasks = day.tasks.filter(x => x.id !== currentTaskToMove.id);
+    getDay(tKey).tasks.push(currentTaskToMove);
+    
+    save(); render(); document.getElementById('modalMove').classList.remove('open'); tg?.HapticFeedback?.notificationOccurred('success');
+  };
+
+  // Рефлексия
+  document.getElementById('chart').onclick = () => {
+    document.getElementById('modalMood').classList.add('open');
+    document.querySelectorAll('.mood-opt').forEach(o => o.classList.remove('active'));
+    selectedMood = ''; document.getElementById('moodText').value = '';
+  };
+  document.querySelectorAll('.mood-opt').forEach(opt => {
+    opt.onclick = () => { document.querySelectorAll('.mood-opt').forEach(o => o.classList.remove('active')); opt.classList.add('active'); selectedMood = opt.dataset.mood; };
+  });
+  document.getElementById('modalMoodSave').onclick = () => {
+    if (!selectedMood) return;
+    if (!state.diaries) state.diaries = {};
+    state.diaries[todayKey()] = { mood: selectedMood, text: document.getElementById('moodText').value };
+    save(); render(); document.getElementById('modalMood').classList.remove('open'); fireConfetti();
+  };
+
+  // Навигация
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+      if (btn.dataset.target === 'progress') {
+        document.getElementById('screen-plan').classList.add('hidden');
+        document.getElementById('screen-progress').classList.remove('hidden');
+        document.getElementById('fabAdd').classList.add('hidden');
+        renderProgress();
+      } else {
+        document.getElementById('screen-progress').classList.add('hidden');
+        document.getElementById('screen-plan').classList.remove('hidden');
+        document.getElementById('fabAdd').classList.remove('hidden');
+      }
+    };
+  });
+
+  // Фокус таймер
+  let focusInterval, focusTimeLeft = 25 * 60;
+  window.startFocus = function(taskName) {
+    document.getElementById('focusTaskName').textContent = taskName;
+    document.getElementById('focusOverlay').classList.add('open');
+    focusTimeLeft = 25 * 60; updateFocusTimer(); clearInterval(focusInterval);
+    focusInterval = setInterval(() => {
+      focusTimeLeft--; updateFocusTimer();
+      if (focusTimeLeft <= 0) {
+        clearInterval(focusInterval); tg?.HapticFeedback?.notificationOccurred('success'); fireConfetti();
+        document.getElementById('focusOverlay').classList.remove('open'); alert('Фокус завершен! 25 минут прошли.');
+      }
+    }, 1000);
+  }
+  function updateFocusTimer() { document.getElementById('focusTime').textContent = `${pad(Math.floor(focusTimeLeft/60))}:${pad(focusTimeLeft%60)}`; }
+  document.getElementById('focusStop').onclick = () => { clearInterval(focusInterval); document.getElementById('focusOverlay').classList.remove('open'); };
+
+  // Конфетти
+  const canvas = document.getElementById('confetti'); const ctx = canvas.getContext('2d'); let particles = [];
+  function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  window.addEventListener('resize', resizeCanvas); resizeCanvas();
+  window.fireConfetti = function() {
+    const colors = ['#7C3AED', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+    for (let i = 0; i < 50; i++) {
+      particles.push({ x: window.innerWidth / 2, y: window.innerHeight / 2, vx: (Math.random() - 0.5) * 15, vy: (Math.random() - 0.5) * 15 - 5, color: colors[Math.floor(Math.random() * colors.length)], size: Math.random() * 6 + 4, life: 1 });
+    }
+    if (particles.length === 50) requestAnimationFrame(updateConfetti);
+  }
+  function updateConfetti() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.life -= 0.015;
+      ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+    });
+    particles = particles.filter(p => p.life > 0);
+    if (particles.length > 0) requestAnimationFrame(updateConfetti);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  render();
+});
 </script>
 </body>
 </html>
