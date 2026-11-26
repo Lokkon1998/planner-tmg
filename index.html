@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1" />
 <meta name="theme-color" content="#05050A" />
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-<title>Aura 6.0</title>
+<title>Aura 7.0</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 :root {
   --bg: #05050A; --surface: rgba(255, 255, 255, 0.04); --surface-hover: rgba(255, 255, 255, 0.08);
   --border: rgba(255, 255, 255, 0.08); --text: #F2F4F8; --text-muted: #8A8D9D;
   --accent-1: #7C3AED; --accent-2: #3B82F6; --success: #10B981; --danger: #EF4444;
-  --warning: #F59E0B; --radius: 20px; --nav-height: 76px;
+  --warning: #F59E0B; --radius: 20px; --nav-height: 76px; --water: #3B82F6;
 }
 [data-theme="emerald"] { --bg: #04120E; --accent-1: #10B981; --accent-2: #3B82F6; }
 [data-theme="sunset"] { --bg: #120804; --accent-1: #F97316; --accent-2: #E11D48; }
@@ -44,26 +44,25 @@ body {
 .progress-ring .fg { stroke: url(#gradient); stroke-dasharray: 157; stroke-dashoffset: 157; transition: stroke-dashoffset 0.6s; }
 .progress-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 13px; font-weight: 700; }
 
-/* --- Quote & Wisdom --- */
+/* --- Quote --- */
 .quote-box { 
-  padding: 16px; margin-bottom: 20px; font-size: 14px; color: var(--text); 
+  padding: 16px 16px 16px 20px; margin-bottom: 20px; font-size: 14px; color: var(--text); 
   line-height: 1.5; background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius); font-style: italic; position: relative;
+  border-left: 4px solid var(--accent-1); border-radius: var(--radius); font-style: italic;
 }
-.quote-box::before { content: '“'; position: absolute; top: -5px; left: 10px; font-size: 40px; color: var(--accent-1); opacity: 0.3; font-family: Georgia, serif; }
 .quote-author { display: block; margin-top: 8px; font-size: 12px; color: var(--accent-2); font-weight: 600; font-style: normal; text-align: right; }
 
 /* --- Horizontal Dates --- */
 .date-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px; scrollbar-width: none; }
 .date-scroll::-webkit-scrollbar { display: none; }
-.date-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; min-width: 64px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: all 0.3s; }
-.date-chip.active { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); border-color: transparent; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); transform: translateY(-2px); }
+.date-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; min-width: 64px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: background 0.3s, border-color 0.3s; }
+.date-chip.active { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); border-color: transparent; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4); }
 .date-chip .d-name { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
-.date-chip.active .d-name { color: rgba(255,255,255,0.8); }
+.date-chip.active .d-name { color: rgba(255,255,255,0.9); }
 .date-chip .d-num { font-size: 20px; font-weight: 800; }
 
 /* --- Energy & Advice --- */
-.energy-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.energy-row { display: flex; gap: 8px; margin-bottom: 12px; }
 .energy-btn { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 4px; color: var(--text-muted); font-size: 13px; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all 0.2s; cursor: pointer; }
 .energy-btn .emoji { font-size: 20px; }
 .energy-btn.active { background: var(--surface-hover); border-color: rgba(255,255,255,0.2); color: var(--text); transform: scale(0.95); }
@@ -75,6 +74,31 @@ body {
 }
 .advice-box b { color: var(--text); }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* --- Water Tracker --- */
+.water-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 16px;
+}
+.water-icon {
+  width: 50px; height: 60px; background: rgba(59,130,246,0.1); border-radius: 10px;
+  position: relative; overflow: hidden; border: 2px solid rgba(59,130,246,0.3);
+  display: flex; align-items: flex-end; justify-content: center; flex-shrink: 0;
+}
+.water-fill {
+  width: 100%; background: var(--water); height: 0%; transition: height 0.5s ease;
+}
+.water-info { flex: 1; }
+.water-title { font-size: 14px; font-weight: 700; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center;}
+.water-title span { font-size: 11px; color: var(--accent-1); cursor: pointer; text-decoration: underline;}
+.water-val { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+.water-btns { display: flex; gap: 6px; }
+.water-btn {
+  background: rgba(59,130,246,0.15); color: var(--water); border: 1px solid rgba(59,130,246,0.3);
+  border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 700; cursor: pointer;
+  transition: all 0.2s;
+}
+.water-btn:active { background: var(--water); color: #fff; transform: scale(0.95); }
 
 /* --- Quick Routines --- */
 .routines-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px; scrollbar-width: none; }
@@ -124,25 +148,23 @@ body {
 .empty h3 { font-size: 16px; margin-bottom: 6px; }
 .empty p { font-size: 13px; color: var(--text-muted); }
 
-/* --- Progress Screen (Stories + Chart) --- */
-.stories-scroll { display: flex; flex-direction: column; gap: 16px; margin-bottom: 30px; }
-.story-card { 
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); 
-  padding: 20px; position: relative; overflow: hidden;
-}
-.story-card::before {
-  content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
-  background: linear-gradient(to bottom, var(--accent-1), var(--accent-2));
-}
-.story-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-.story-text { font-size: 14px; line-height: 1.5; color: var(--text-muted); }
+/* --- Progress Screen --- */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.stat-val { font-size: 28px; font-weight: 800; color: var(--accent-1); margin-bottom: 4px; }
+.stat-lbl { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
 
-/* График (Линейный) */
-.chart-wrapper { width: 100%; height: 150px; margin-bottom: 20px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 10px; position: relative; }
+.chart-wrapper { width: 100%; height: 150px; margin-bottom: 24px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 10px; position: relative; }
 .chart-svg { width: 100%; height: 100%; overflow: visible; }
 .chart-line { fill: none; stroke: url(#gradient); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 4px 6px rgba(124,58,237,0.5)); }
 .chart-area { fill: url(#areaGradient); opacity: 0.3; }
 .chart-dot { fill: var(--accent-2); stroke: var(--text); stroke-width: 2; }
+
+.badges-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.badge { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px 8px; text-align: center; opacity: 0.5; filter: grayscale(1); transition: all 0.3s; }
+.badge.unlocked { opacity: 1; filter: grayscale(0); border-color: var(--accent-1); box-shadow: 0 0 15px rgba(124, 58, 237, 0.2); }
+.badge-icon { font-size: 28px; margin-bottom: 8px; }
+.badge-name { font-size: 11px; font-weight: 700; line-height: 1.2; }
 
 /* --- Bottom Nav --- */
 .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-height); background: rgba(5, 5, 10, 0.85); backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; max-width: 520px; margin: 0 auto; padding-bottom: env(safe-area-inset-bottom); z-index: 90; }
@@ -211,7 +233,6 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
     </div>
   </header>
 
-  <!-- Мудрость дня -->
   <div class="quote-box" id="quoteBox">
     Текст цитаты...
     <span class="quote-author" id="quoteAuthor">— Автор</span>
@@ -234,6 +255,20 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
 
   <div class="advice-box" id="adviceBox" style="display:none;"></div>
 
+  <!-- ТРЕКЕР ВОДЫ -->
+  <div class="water-card">
+    <div class="water-icon"><div class="water-fill" id="waterFill"></div></div>
+    <div class="water-info">
+      <div class="water-title">Водный баланс <span onclick="openWaterModal()">⚙️</span></div>
+      <div class="water-val" id="waterVal">0 / 2000 мл</div>
+      <div class="water-btns">
+        <button class="water-btn" onclick="addWater(250)">+250</button>
+        <button class="water-btn" onclick="addWater(500)">+500</button>
+        <button class="water-btn" onclick="addWater(1000)">+1000</button>
+      </div>
+    </div>
+  </div>
+
   <!-- БЫСТРЫЕ РУТИНЫ -->
   <div class="routines-scroll">
     <button type="button" class="routine-btn" onclick="addQuickTask('💧 Выпить воды', 1)">💧 Вода</button>
@@ -250,35 +285,30 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
   <div id="taskContainer"></div>
 </div>
 
-<!-- ЭКРАН: ИСТОРИИ И ПРОГРЕСС -->
+<!-- ЭКРАН: ПРОГРЕСС -->
 <div id="screen-progress" class="hidden">
   <header class="header" style="margin-bottom: 20px;">
-    <div class="time-widget"><h1 style="font-size:32px; font-weight:800;">Твой путь</h1></div>
+    <div class="time-widget"><h1 style="font-size:32px; font-weight:800;">Прогресс</h1></div>
   </header>
 
-  <!-- График роста -->
-  <h2 style="font-size:16px; margin-bottom:12px;">Динамика роста</h2>
-  <div class="chart-wrapper">
-    <svg class="chart-svg" id="growthChart" viewBox="0 0 300 120" preserveAspectRatio="none">
-      <!-- Заполняется через JS -->
-    </svg>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-val" id="statStreak" style="color:var(--warning);">0</div>
+      <div class="stat-lbl">🔥 Дней подряд</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="statTasks" style="color:var(--accent-1);">0</div>
+      <div class="stat-lbl">✅ Всего задач</div>
+    </div>
   </div>
 
-  <h2 style="font-size:16px; margin-bottom:12px;">Истории успеха</h2>
-  <div class="stories-scroll">
-    <div class="story-card">
-      <div class="story-title">От дворника до миллионера</div>
-      <div class="story-text">Джон Пол ДеДжория начал с мытья полов в салоне, а стал основателем империи по уходу за волосами Paul Mitchell с оборотом в миллиард долларов.</div>
-    </div>
-    <div class="story-card">
-      <div class="story-title">Не сдавайся после 100 отказов</div>
-      <div class="story-text">Полковник Сандерс (KFC) начал свой бизнес в 65 лет. Его рецепт курицы отвергли более 1000 ресторанов, прежде чем он нашел первого партнера.</div>
-    </div>
-    <div class="story-card">
-      <div class="story-title">Из бедности в высшую лигу</div>
-      <div class="story-text">Опра Уинфри выросла в нищете и подвергалась издевательствам. Сегодня она — первая темнокожая женщина-миллиардер и влиятельнейшая медиа-личность.</div>
-    </div>
+  <h2 style="font-size:16px; margin-bottom:12px;">Динамика роста</h2>
+  <div class="chart-wrapper">
+    <svg class="chart-svg" id="growthChart" viewBox="0 0 300 120" preserveAspectRatio="none"></svg>
   </div>
+
+  <h2 style="font-size:16px; margin-bottom:12px;">Достижения</h2>
+  <div class="badges-grid" id="badgesGrid"></div>
 </div>
 
 <button class="fab" id="fabAdd" onclick="openAddModal()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -288,7 +318,7 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
     <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>План
   </button>
   <button class="nav-btn" data-target="progress" onclick="switchTab('progress')">
-    <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>Истории
+    <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>Прогресс
   </button>
 </nav>
 
@@ -315,12 +345,27 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
   </div>
 </div>
 
+<!-- МОДАЛКА ВОДЫ -->
+<div class="modal-overlay" id="modalWater">
+  <div class="modal-content">
+    <h3>Твоя норма воды</h3>
+    <div class="input-group">
+      <label>Сколько миллилитров в день?</label>
+      <input type="number" id="waterTargetInput" placeholder="2000" step="100" />
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeModal('modalWater')">Отмена</button>
+      <button class="btn btn-save" onclick="saveWaterTarget()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // Глобальный стейт
 let state = {};
 let activeDate = '';
 let selectedDiff = 1;
-const STORAGE_KEY = 'aura_mega_v6';
+const STORAGE_KEY = 'aura_mega_v7';
 
 const pad = n => String(n).padStart(2, '0');
 const dateKey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -348,10 +393,10 @@ window.onload = function() {
 
   try {
     state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
-      days: {}, streak: 0, bestStreak: 0, lastStreakDate: null, theme: 'default'
+      days: {}, streak: 0, bestStreak: 0, lastStreakDate: null, theme: 'default', waterTarget: 2000
     };
   } catch(e) {
-    state = { days: {}, streak: 0, bestStreak: 0, lastStreakDate: null, theme: 'default' };
+    state = { days: {}, streak: 0, bestStreak: 0, lastStreakDate: null, theme: 'default', waterTarget: 2000 };
   }
   
   activeDate = todayKey();
@@ -365,7 +410,11 @@ window.onload = function() {
 };
 
 function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-function getDay(k) { if (!state.days[k]) state.days[k] = { tasks: [], energy: '' }; return state.days[k]; }
+function getDay(k) { 
+  if (!state.days[k]) state.days[k] = { tasks: [], energy: '', water: 0 }; 
+  if (state.days[k].water === undefined) state.days[k].water = 0;
+  return state.days[k]; 
+}
 
 function updateClock() {
   const now = new Date();
@@ -378,8 +427,9 @@ function renderAll() {
   renderQuote();
   renderDates();
   renderEnergy();
+  renderWater();
   renderTasks();
-  renderChart();
+  renderStats();
 }
 
 function renderQuote() {
@@ -406,6 +456,55 @@ function renderDates() {
   }
 }
 
+// === ВОДА ===
+function renderWater() {
+  const day = getDay(activeDate);
+  const target = state.waterTarget || 2000;
+  document.getElementById('waterVal').textContent = `${day.water} / ${target} мл`;
+  
+  let pct = (day.water / target) * 100;
+  if (pct > 100) pct = 100;
+  document.getElementById('waterFill').style.height = pct + '%';
+  
+  if (pct >= 100) {
+    document.getElementById('waterFill').style.background = 'var(--success)';
+  } else {
+    document.getElementById('waterFill').style.background = 'var(--water)';
+  }
+}
+
+function addWater(ml) {
+  const day = getDay(activeDate);
+  const prev = day.water;
+  day.water += ml;
+  save();
+  renderWater();
+  
+  if (prev < (state.waterTarget || 2000) && day.water >= (state.waterTarget || 2000)) {
+    fireConfetti();
+    if(window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    setTimeout(() => alert('💧 Отлично! Норма воды на сегодня выполнена!'), 300);
+  } else {
+    if(window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+  }
+}
+
+function openWaterModal() {
+  document.getElementById('waterTargetInput').value = state.waterTarget || 2000;
+  document.getElementById('modalWater').classList.add('open');
+}
+
+function saveWaterTarget() {
+  const val = parseInt(document.getElementById('waterTargetInput').value);
+  if (val > 0) {
+    state.waterTarget = val;
+    save();
+    renderWater();
+    closeModal('modalWater');
+  }
+}
+
+// === РЕСУРС И ЗАДАЧИ ===
 function setEnergy(level) {
   const day = getDay(activeDate);
   day.energy = level;
@@ -496,7 +595,10 @@ function toggleTask(id) {
   const t = day.tasks.find(x => x.id === id);
   if (!t) return;
   t.done = !t.done;
-  if (t.done && window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+  if (t.done) {
+    if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    if (day.tasks.every(x => x.done)) fireConfetti();
+  }
   save(); renderTasks();
 }
 
@@ -506,14 +608,22 @@ function deleteTask(id) {
   save(); renderTasks();
 }
 
-// График
-function renderChart() {
+// === ПРОГРЕСС ===
+function renderStats() {
+  // Стрик
+  document.getElementById('statStreak').textContent = state.streak || 0;
+  
+  // Всего задач
+  let total = 0;
+  Object.values(state.days).forEach(d => total += d.tasks.filter(t => t.done).length);
+  document.getElementById('statTasks').textContent = total;
+
+  // График
   const svg = document.getElementById('growthChart');
   const today = new Date();
   const points = [];
   let maxVal = 1;
 
-  // Берем последние 7 дней
   for (let i = 6; i >= 0; i--) {
     const d = new Date(today); d.setDate(today.getDate() - i);
     const key = dateKey(d);
@@ -551,9 +661,24 @@ function renderChart() {
       return `<circle class="chart-dot" cx="${x}" cy="${y}" r="4" />`;
     }).join('')}
   `;
+
+  // Ачивки
+  const BADGES = [
+    { id: 'streak3', icon: '🔥', name: '3 дня подряд', unlocked: state.streak >= 3 },
+    { id: 'streak7', icon: '🏆', name: 'Неделя силы', unlocked: state.streak >= 7 },
+    { id: 'task10', icon: '✅', name: '10 задач', unlocked: total >= 10 },
+    { id: 'task50', icon: '💎', name: '50 задач', unlocked: total >= 50 },
+    { id: 'water', icon: '💧', name: 'Водный баланс', unlocked: Object.values(state.days).some(d => d.water >= (state.waterTarget || 2000)) },
+    { id: 'early', icon: '🌅', name: 'Ранняя пташка', unlocked: Object.values(state.days).some(d => d.tasks.some(t => t.done && t.timeStart && t.timeStart < '08:00')) }
+  ];
+
+  const grid = document.getElementById('badgesGrid'); grid.innerHTML = '';
+  BADGES.forEach(b => {
+    grid.innerHTML += `<div class="badge ${b.unlocked ? 'unlocked' : ''}"><div class="badge-icon">${b.icon}</div><div class="badge-name">${b.name}</div></div>`;
+  });
 }
 
-// UI Функции
+// === UI ===
 function switchTheme() {
   const themes = ['default', 'emerald', 'sunset'];
   let idx = themes.indexOf(state.theme || 'default');
@@ -570,7 +695,7 @@ function switchTab(tab) {
     document.getElementById('screen-plan').classList.add('hidden');
     document.getElementById('screen-progress').classList.remove('hidden');
     document.getElementById('fabAdd').classList.add('hidden');
-    renderChart();
+    renderStats();
   } else {
     document.getElementById('screen-progress').classList.add('hidden');
     document.getElementById('screen-plan').classList.remove('hidden');
@@ -603,6 +728,30 @@ function saveNewTask() {
   });
   save(); renderTasks(); closeModal('modalAdd');
 }
+
+// === КОНФЕТТИ ===
+const canvas = document.getElementById('confetti'); const ctx = canvas.getContext('2d'); let particles = [];
+function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resizeCanvas); resizeCanvas();
+function fireConfetti() {
+  const colors = ['#7C3AED', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+  for (let i = 0; i < 50; i++) {
+    particles.push({ x: window.innerWidth / 2, y: window.innerHeight / 2, vx: (Math.random() - 0.5) * 15, vy: (Math.random() - 0.5) * 15 - 5, color: colors[Math.floor(Math.random() * colors.length)], size: Math.random() * 6 + 4, life: 1 });
+  }
+  if (particles.length === 50) requestAnimationFrame(updateConfetti);
+}
+function updateConfetti() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.life -= 0.015;
+    ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+  });
+  particles = particles.filter(p => p.life > 0);
+  if (particles.length > 0) requestAnimationFrame(updateConfetti);
+  else ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
 </script>
 </body>
 </html>
