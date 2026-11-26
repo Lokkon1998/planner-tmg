@@ -4,59 +4,37 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1" />
 <meta name="theme-color" content="#05050A" />
-<title>Aura 2.0</title>
+<title>Aura 3.0</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 /* ===== ТЕМЫ ===== */
 :root {
-  --bg: #05050A;
-  --surface: rgba(255, 255, 255, 0.04);
-  --surface-hover: rgba(255, 255, 255, 0.08);
-  --border: rgba(255, 255, 255, 0.08);
-  --text: #F2F4F8;
-  --text-muted: #8A8D9D;
-  --accent-1: #7C3AED;
-  --accent-2: #3B82F6;
-  --success: #10B981;
-  --danger: #EF4444;
-  --warning: #F59E0B;
-  --radius: 20px;
-  --nav-height: 76px;
+  --bg: #05050A; --surface: rgba(255, 255, 255, 0.04); --surface-hover: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.08); --text: #F2F4F8; --text-muted: #8A8D9D;
+  --accent-1: #7C3AED; --accent-2: #3B82F6; --success: #10B981; --danger: #EF4444;
+  --warning: #F59E0B; --radius: 20px; --nav-height: 76px;
 }
-[data-theme="emerald"] {
-  --bg: #04120E; --accent-1: #10B981; --accent-2: #3B82F6;
-}
-[data-theme="sunset"] {
-  --bg: #120804; --accent-1: #F97316; --accent-2: #E11D48;
-}
+[data-theme="emerald"] { --bg: #04120E; --accent-1: #10B981; --accent-2: #3B82F6; }
+[data-theme="sunset"] { --bg: #120804; --accent-1: #F97316; --accent-2: #E11D48; }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
 body {
   background-color: var(--bg);
-  background-image: 
-    radial-gradient(circle at 15% 0%, rgba(124, 58, 237, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 85% 100%, rgba(59, 130, 246, 0.15) 0%, transparent 40%);
-  background-attachment: fixed;
-  color: var(--text);
+  background-image: radial-gradient(circle at 15% 0%, rgba(124, 58, 237, 0.15) 0%, transparent 40%),
+                    radial-gradient(circle at 85% 100%, rgba(59, 130, 246, 0.15) 0%, transparent 40%);
+  background-attachment: fixed; color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  padding: 20px 20px calc(var(--nav-height) + 40px);
-  min-height: 100vh;
-  max-width: 520px;
-  margin: 0 auto;
-  overflow-x: hidden;
+  padding: 20px 20px calc(var(--nav-height) + 40px); min-height: 100vh; max-width: 520px; margin: 0 auto; overflow-x: hidden;
   transition: background-color 0.5s;
 }
-
-/* Утилиты */
 .hidden { display: none !important; }
-.glass { background: var(--surface); backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: var(--radius); }
 
 /* --- Header & Clock --- */
 .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-top: 10px; }
 .time-widget { display: flex; flex-direction: column; }
 .clock { font-size: 36px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(135deg, #fff, var(--text-muted)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; }
-.date-label { font-size: 13px; color: var(--text-muted); font-weight: 500; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.date-label { font-size: 13px; color: var(--text-muted); font-weight: 500; margin-top: 4px; text-transform: uppercase; }
 .header-actions { display: flex; gap: 8px; align-items: center; }
 .icon-btn { background: var(--surface); border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text); cursor: pointer; }
 .progress-ring { position: relative; width: 60px; height: 60px; }
@@ -78,23 +56,47 @@ body {
 .date-chip.active .d-name { color: rgba(255,255,255,0.8); }
 .date-chip .d-num { font-size: 20px; font-weight: 800; }
 
-/* --- Energy --- */
-.energy-row { display: flex; gap: 8px; margin-bottom: 24px; }
+/* --- Energy & Advice --- */
+.energy-row { display: flex; gap: 8px; margin-bottom: 12px; }
 .energy-btn { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 4px; color: var(--text-muted); font-size: 13px; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all 0.2s; }
 .energy-btn .emoji { font-size: 20px; }
 .energy-btn.active { background: var(--surface-hover); border-color: rgba(255,255,255,0.2); color: var(--text); }
+
+.advice-box {
+  background: var(--surface); border: 1px dashed var(--border); border-radius: 14px;
+  padding: 14px; font-size: 13px; line-height: 1.4; margin-bottom: 24px;
+  color: var(--text-muted); animation: slideDown 0.3s ease;
+}
+.advice-box b { color: var(--text); }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* --- Tasks --- */
 .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .section-head h2 { font-size: 18px; font-weight: 700; }
 .task-list { display: flex; flex-direction: column; gap: 12px; }
-.task-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; align-items: flex-start; gap: 14px; transition: all 0.3s; position: relative; overflow: hidden; }
+
+.task-card {
+  position: relative; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px; display: flex; align-items: flex-start; gap: 14px;
+  transition: opacity 0.3s; overflow: hidden;
+}
 .task-card.done { opacity: 0.5; }
 .task-card.done .task-title { text-decoration: line-through; color: var(--text-muted); }
 
-/* Свайп для переноса */
-.task-swipe-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--accent-2); display: flex; align-items: center; padding-left: 20px; font-weight: 700; color: #fff; z-index: 0; border-radius: var(--radius); }
-.task-inner { position: relative; z-index: 1; background: var(--surface); width: 100%; display: flex; align-items: flex-start; gap: 14px; border-radius: var(--radius); transition: transform 0.2s; touch-action: pan-y; }
+/* Свайп */
+.task-inner {
+  position: relative; z-index: 1; width: 100%; display: flex; align-items: flex-start; gap: 14px;
+  background: var(--surface); touch-action: pan-y; transition: transform 0.2s;
+}
+
+/* Сложность задач */
+.diff-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 7px; flex-shrink: 0; }
+.diff-1 { background: var(--success); box-shadow: 0 0 8px var(--success); }
+.diff-2 { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
+.diff-3 { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+
+/* Если ресурс на нуле, сложные задачи тускнеют */
+.low-energy .task-card[data-diff="3"] { opacity: 0.4; filter: grayscale(0.5); }
 
 .task-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; margin-top: 2px; }
 .task-card.done .task-check { background: var(--success); border-color: var(--success); }
@@ -119,14 +121,12 @@ body {
 .bar { width: 24px; background: var(--surface-hover); border-radius: 6px; position: relative; transition: height 0.5s; min-height: 4px; }
 .bar-fill { position: absolute; bottom: 0; width: 100%; background: linear-gradient(to top, var(--accent-1), var(--accent-2)); border-radius: 6px; transition: height 0.5s; }
 .bar-label { font-size: 11px; color: var(--text-muted); font-weight: 600; }
-
 .diary-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px; }
 .diary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
 .diary-head { display: flex; justify-content: space-between; margin-bottom: 8px; }
 .diary-date { font-size: 12px; color: var(--text-muted); font-weight: 600; }
 .diary-mood { font-size: 20px; }
 .diary-text { font-size: 14px; line-height: 1.4; }
-
 .badges-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .badge { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px 8px; text-align: center; opacity: 0.5; filter: grayscale(1); transition: all 0.3s; }
 .badge.unlocked { opacity: 1; filter: grayscale(0); border-color: var(--accent-1); box-shadow: 0 0 15px rgba(124, 58, 237, 0.2); }
@@ -174,6 +174,13 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
 
 /* --- Confetti --- */
 .confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
+
+/* Стили для выбора сложности */
+.diff-selector { display: flex; gap: 8px; }
+.diff-opt { flex: 1; padding: 12px 0; text-align: center; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-muted); }
+.diff-opt.active[data-val="1"] { border-color: var(--success); color: var(--success); background: rgba(16,185,129,0.1); }
+.diff-opt.active[data-val="2"] { border-color: var(--warning); color: var(--warning); background: rgba(245,158,11,0.1); }
+.diff-opt.active[data-val="3"] { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.1); }
 </style>
 </head>
 <body>
@@ -211,6 +218,8 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
     <button class="energy-btn" data-energy="low"><span class="emoji">🪫</span>Без сил</button>
   </div>
 
+  <div class="advice-box" id="adviceBox" style="display:none;"></div>
+
   <div class="section-head">
     <h2>Твой таймлайн</h2>
     <span style="font-size:13px; color:var(--text-muted); font-weight:600;" id="taskCount">0 / 0</span>
@@ -235,17 +244,11 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
   <div class="badges-grid" id="badgesGrid"></div>
 </div>
 
-<!-- Кнопка ДОБАВИТЬ -->
 <button class="fab" id="fabAdd"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
 
-<!-- НИЖНЕЕ МЕНЮ -->
 <nav class="bottom-nav">
-  <button class="nav-btn active" data-target="plan">
-    <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>План
-  </button>
-  <button class="nav-btn" data-target="progress">
-    <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>Прогресс
-  </button>
+  <button class="nav-btn active" data-target="plan"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>План</button>
+  <button class="nav-btn" data-target="progress"><svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>Прогресс</button>
 </nav>
 
 <!-- МОДАЛКА ДОБАВЛЕНИЯ -->
@@ -253,10 +256,32 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
   <div class="modal-content">
     <h3>Что в планах?</h3>
     <div class="input-group"><label>Задача</label><input type="text" id="taskInput" placeholder="Название..." autocomplete="off" /></div>
+    
+    <div class="input-group">
+      <label>Сложность</label>
+      <div class="diff-selector">
+        <div class="diff-opt active" data-val="1">🟢 Легко</div>
+        <div class="diff-opt" data-val="2">🟡 Средне</div>
+        <div class="diff-opt" data-val="3">🔴 Сложно</div>
+      </div>
+    </div>
+
     <div class="input-group"><label>Время (необязательно)</label><div class="time-inputs"><input type="time" id="timeStart" /><input type="time" id="timeEnd" /></div></div>
     <div class="modal-btns">
       <button class="btn btn-cancel" onclick="document.getElementById('modalAdd').classList.remove('open')">Отмена</button>
       <button class="btn btn-save" id="modalSave">В план</button>
+    </div>
+  </div>
+</div>
+
+<!-- МОДАЛКА ПЕРЕНОСА -->
+<div class="modal-overlay" id="modalMove">
+  <div class="modal-content">
+    <h3>На когда перенести?</h3>
+    <div class="input-group"><label>Время (если нужно)</label><div class="time-inputs"><input type="time" id="moveTimeStart" /><input type="time" id="moveTimeEnd" /></div></div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="document.getElementById('modalMove').classList.remove('open')">Отмена</button>
+      <button class="btn btn-save" id="modalMoveSave">На завтра</button>
     </div>
   </div>
 </div>
@@ -266,11 +291,8 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
   <div class="modal-content">
     <h3>Как прошел день?</h3>
     <div class="mood-options">
-      <div class="mood-opt" data-mood="🤩">🤩</div>
-      <div class="mood-opt" data-mood="🙂">🙂</div>
-      <div class="mood-opt" data-mood="😐">😐</div>
-      <div class="mood-opt" data-mood="😔">😔</div>
-      <div class="mood-opt" data-mood="😫">😫</div>
+      <div class="mood-opt" data-mood="🤩">🤩</div><div class="mood-opt" data-mood="🙂">🙂</div>
+      <div class="mood-opt" data-mood="😐">😐</div><div class="mood-opt" data-mood="😔">😔</div><div class="mood-opt" data-mood="😫">😫</div>
     </div>
     <div class="input-group"><textarea id="moodText" rows="2" placeholder="Пара слов о дне..."></textarea></div>
     <button class="btn btn-save" style="width:100%;" id="modalMoodSave">Сохранить</button>
@@ -288,58 +310,50 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
 const tg = window.Telegram?.WebApp;
 tg?.ready(); tg?.expand(); tg?.setHeaderColor?.('#05050A');
 
-const STORAGE_KEY = 'aura_mega_v1';
+const STORAGE_KEY = 'aura_mega_v2';
 const QUOTES = [
-  "Дисциплина — это выбор между тем, что ты хочешь сейчас, и тем, что хочешь больше всего.",
+  "Дисциплина — это выбор между тем, что хочешь сейчас, и тем, что хочешь больше всего.",
   "Ты не обязан быть великим, чтобы начать. Начни, чтобы стать великим.",
   "Маленькие шаги каждый день создают большие перемены.",
   "Прогресс важнее совершенства.",
-  "Лучший день, чтобы начать, — сегодня."
+  "Лучший день, чтобы начать, — сегодня.",
+  "Секрет движения вперёд — начать.",
+  "Ты сильнее, чем думаешь.",
+  "Не сравнивай себя с другими. Сравнивай с собой вчерашним.",
+  "Успех — это сумма маленьких усилий, повторяемых изо дня в день.",
+  "Отдых — это часть продуктивности, а не её отсутствие."
 ];
 
-const BADGES = [
-  { id: 'streak3', icon: '🔥', name: '3 дня подряд', cond: s => s.streak >= 3 },
-  { id: 'streak7', icon: '🏆', name: 'Неделя силы', cond: s => s.streak >= 7 },
-  { id: 'task10', icon: '✅', name: '10 задач', cond: s => getTotalTasks(s) >= 10 },
-  { id: 'task50', icon: '💎', name: '50 задач', cond: s => getTotalTasks(s) >= 50 },
-  { id: 'early', icon: '🌅', name: 'Ранняя пташка', cond: s => hasEarlyTask(s) },
-  { id: 'diary', icon: '📝', name: 'Дневник', cond: s => Object.keys(s.diaries||{}).length >= 3 }
-];
+const ADVICES = {
+  high: "🔥 <b>Ты на пике!</b> Отличное время сделать самую сложную задачу. Твой мозг сейчас работает лучше всего, не трать это на рутину.",
+  mid: "😐 <b>Средний ресурс.</b> Хорошо подойдёт для обычных задач. Если устал — сделай перерыв на 15 минут, выпей воды.",
+  low: "🪫 <b>На нуле...</b> Не геройствуй. Сложные задачи лучше перенести или сделать что-то совсем простое: уборка, вода, прогулка. Отдохни, иначе сгоришь."
+};
 
-// Утилиты
-const pad = n => String(n).padStart(2, '0');
-const dateKey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-const todayKey = () => dateKey(new Date());
-
-// Стейт
 let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
   days: {}, diaries: {}, streak: 0, bestStreak: 0, lastStreakDate: null, theme: 'default', unlockedBadges: []
 };
 let activeDate = todayKey();
-let selectedMood = '';
-let swipeStartX = 0;
-let swipeCurrentCard = null;
+let currentTaskToMove = null; // Для модалки переноса
+let swipeStartX = 0; let swipeCurrentCard = null; let swipeTaskId = null;
 
 const save = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 const getDay = (k) => { if (!state.days[k]) state.days[k] = { tasks: [], energy: '' }; return state.days[k]; };
 
-// Смена темы
+// Тема
 document.getElementById('themeBtn').onclick = () => {
   const themes = ['default', 'emerald', 'sunset'];
   let idx = themes.indexOf(state.theme || 'default');
   state.theme = themes[(idx + 1) % themes.length];
   document.documentElement.setAttribute('data-theme', state.theme === 'default' ? '' : state.theme);
-  save();
-  tg?.HapticFeedback?.impactOccurred('light');
+  save(); tg?.HapticFeedback?.impactOccurred('light');
 };
 if (state.theme && state.theme !== 'default') document.documentElement.setAttribute('data-theme', state.theme);
 
-// Живые часы
 function updateClock() {
   const now = new Date();
   document.getElementById('liveClock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  const days = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
-  const months = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+  const days = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб']; const months = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
   document.getElementById('dateLabel').textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
 }
 setInterval(updateClock, 1000); updateClock();
@@ -350,12 +364,14 @@ function render() {
   renderTasks();
   renderProgress();
   checkBadges();
-  document.getElementById('quoteBox').textContent = `«${QUOTES[Math.floor(Date.now()/86400000) % QUOTES.length]}»`;
+  
+  // Цитата дня (меняется в зависимости от даты)
+  const qIdx = Math.floor(new Date().setHours(0,0,0,0) / 86400000) % QUOTES.length;
+  document.getElementById('quoteBox').textContent = `«${QUOTES[qIdx]}»`;
 }
 
 function renderDates() {
-  const scroll = document.getElementById('dateScroll');
-  scroll.innerHTML = '';
+  const scroll = document.getElementById('dateScroll'); scroll.innerHTML = '';
   const today = new Date();
   for (let i = -1; i <= 5; i++) {
     const d = new Date(today); d.setDate(today.getDate() + i);
@@ -373,6 +389,17 @@ function renderDates() {
 function renderEnergy() {
   const day = getDay(activeDate);
   document.querySelectorAll('.energy-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.energy === day.energy));
+  
+  const adviceBox = document.getElementById('adviceBox');
+  if (day.energy && ADVICES[day.energy]) {
+    adviceBox.innerHTML = ADVICES[day.energy];
+    adviceBox.style.display = 'block';
+    // Если ресурс на нуле, добавляем класс, чтобы притушить сложные задачи
+    document.getElementById('screen-plan').classList.toggle('low-energy', day.energy === 'low');
+  } else {
+    adviceBox.style.display = 'none';
+    document.getElementById('screen-plan').classList.remove('low-energy');
+  }
 }
 
 function renderTasks() {
@@ -392,14 +419,15 @@ function renderTasks() {
   }
 
   const sorted = [...day.tasks].sort((a, b) => (a.timeStart || '99:99').localeCompare(b.timeStart || '99:99'));
-  const now = new Date();
-  const curTime = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const now = new Date(); const curTime = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
   const isToday = activeDate === todayKey();
   const list = document.createElement('div'); list.className = 'task-list';
 
   sorted.forEach(t => {
     const card = document.createElement('div');
+    let diff = t.diff || 1; // Дефолтная сложность 1
     card.className = 'task-card' + (t.done ? ' done' : '');
+    card.dataset.diff = diff;
     
     let timeHtml = '', statusClass = '';
     if (t.timeStart) {
@@ -413,8 +441,8 @@ function renderTasks() {
     card.className += statusClass;
 
     card.innerHTML = `
-      <div class="task-swipe-bg">➡️ На завтра</div>
       <div class="task-inner">
+        <div class="diff-dot diff-${diff}"></div>
         <div class="task-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
         <div class="task-content">
           <div class="task-title">${t.text}</div>
@@ -426,55 +454,45 @@ function renderTasks() {
 
     const inner = card.querySelector('.task-inner');
 
-    // Клик по чекбоксу
     card.querySelector('.task-check').onclick = (e) => {
-      e.stopPropagation();
-      t.done = !t.done;
+      e.stopPropagation(); t.done = !t.done;
       if (t.done) { checkStreak(); tg?.HapticFeedback?.notificationOccurred('success'); if(day.tasks.every(x=>x.done)) fireConfetti(); }
       save(); render();
     };
 
-    // Удалить
     card.querySelector('.task-del').onclick = (e) => {
       e.stopPropagation(); day.tasks = day.tasks.filter(x => x.id !== t.id); save(); render();
     };
 
-    // Клик по задаче = Фокус
     inner.onclick = (e) => {
       if (e.target.classList.contains('task-check') || e.target.classList.contains('task-del')) return;
       if (t.done) return;
       startFocus(t.text);
     };
 
-    // Свайп вправо (Перенос)
+    // Свайп
     inner.addEventListener('touchstart', e => {
-      swipeStartX = e.touches[0].clientX;
-      swipeCurrentCard = inner;
-      inner.style.transition = 'none';
+      swipeStartX = e.touches[0].clientX; swipeCurrentCard = inner; swipeTaskId = t.id; inner.style.transition = 'none';
     });
-
     inner.addEventListener('touchmove', e => {
       if (!swipeCurrentCard) return;
       const dx = e.touches[0].clientX - swipeStartX;
       if (dx > 0) swipeCurrentCard.style.transform = `translateX(${dx}px)`;
     });
-
     inner.addEventListener('touchend', e => {
       if (!swipeCurrentCard) return;
       const dx = e.changedTouches[0].clientX - swipeStartX;
       swipeCurrentCard.style.transition = 'transform 0.2s';
-      if (dx > 100) {
-        // Перенос на завтра
+      
+      if (dx > 80) {
         swipeCurrentCard.style.transform = `translateX(100%)`;
         setTimeout(() => {
-          const tomorrow = new Date(activeDate + 'T00:00:00');
-          tomorrow.setDate(tomorrow.getDate() + 1);
-          const tKey = dateKey(tomorrow);
-          
-          day.tasks = day.tasks.filter(x => x.id !== t.id);
-          getDay(tKey).tasks.push(t);
-          save(); render();
-          tg?.HapticFeedback?.notificationOccurred('success');
+          currentTaskToMove = t; // Запоминаем задачу
+          document.getElementById('modalMove').classList.add('open');
+          document.getElementById('moveTimeStart').value = t.timeStart || '';
+          document.getElementById('moveTimeEnd').value = t.timeEnd || '';
+          // Возвращаем карточку на место, чтобы не пропала, если юзер нажмет "Отмена"
+          swipeCurrentCard.style.transform = `translateX(0)`;
         }, 200);
       } else {
         swipeCurrentCard.style.transform = `translateX(0)`;
@@ -490,54 +508,41 @@ function renderTasks() {
 
 function renderProgress() {
   const chart = document.getElementById('chart'); chart.innerHTML = '';
-  const today = new Date();
-  const days = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'];
-  let maxTasks = 1;
-
-  const data = [];
+  const today = new Date(); const days = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'];
+  let maxTasks = 1; const data = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(today); d.setDate(today.getDate() - i);
-    const key = dateKey(d);
-    const done = state.days[key] ? state.days[key].tasks.filter(t=>t.done).length : 0;
+    const key = dateKey(d); const done = state.days[key] ? state.days[key].tasks.filter(t=>t.done).length : 0;
     if (done > maxTasks) maxTasks = done;
     data.push({ day: days[(d.getDay()+6)%7], val: done });
   }
-
   data.forEach(item => {
     const h = (item.val / maxTasks) * 100;
-    chart.innerHTML += `
-      <div class="bar-wrap">
-        <div class="bar"><div class="bar-fill" style="height:${h}%"></div></div>
-        <div class="bar-label">${item.day}</div>
-      </div>`;
+    chart.innerHTML += `<div class="bar-wrap"><div class="bar"><div class="bar-fill" style="height:${h}%"></div></div><div class="bar-label">${item.day}</div></div>`;
   });
 
-  // Дневник
   const diaryList = document.getElementById('diaryList'); diaryList.innerHTML = '';
   const diaries = Object.entries(state.diaries || {}).sort((a,b) => b[0].localeCompare(a[0])).slice(0, 5);
   if (!diaries.length) diaryList.innerHTML = '<div style="font-size:14px; color:var(--text-muted);">Пока нет записей</div>';
   diaries.forEach(([k, v]) => {
-    diaryList.innerHTML += `
-      <div class="diary-card">
-        <div class="diary-head">
-          <div class="diary-date">${k.split('-').reverse().join('.')}</div>
-          <div class="diary-mood">${v.mood}</div>
-        </div>
-        ${v.text ? `<div class="diary-text">${v.text}</div>` : ''}
-      </div>`;
+    diaryList.innerHTML += `<div class="diary-card"><div class="diary-head"><div class="diary-date">${k.split('-').reverse().join('.')}</div><div class="diary-mood">${v.mood}</div></div>${v.text ? `<div class="diary-text">${v.text}</div>` : ''}</div>`;
   });
 
-  // Ачивки
   const badgesGrid = document.getElementById('badgesGrid'); badgesGrid.innerHTML = '';
   BADGES.forEach(b => {
     const unlocked = state.unlockedBadges.includes(b.id);
-    badgesGrid.innerHTML += `
-      <div class="badge ${unlocked ? 'unlocked' : ''}">
-        <div class="badge-icon">${b.icon}</div>
-        <div class="badge-name">${b.name}</div>
-      </div>`;
+    badgesGrid.innerHTML += `<div class="badge ${unlocked ? 'unlocked' : ''}"><div class="badge-icon">${b.icon}</div><div class="badge-name">${b.name}</div></div>`;
   });
 }
+
+const BADGES = [
+  { id: 'streak3', icon: '🔥', name: '3 дня подряд', cond: s => s.streak >= 3 },
+  { id: 'streak7', icon: '🏆', name: 'Неделя силы', cond: s => s.streak >= 7 },
+  { id: 'task10', icon: '✅', name: '10 задач', cond: s => getTotalTasks(s) >= 10 },
+  { id: 'task50', icon: '💎', name: '50 задач', cond: s => getTotalTasks(s) >= 50 },
+  { id: 'early', icon: '🌅', name: 'Ранняя пташка', cond: s => hasEarlyTask(s) },
+  { id: 'diary', icon: '📝', name: 'Дневник', cond: s => Object.keys(s.diaries||{}).length >= 3 }
+];
 
 function getTotalTasks(s) { let c = 0; Object.values(s.days).forEach(d => c += d.tasks.filter(t=>t.done).length); return c; }
 function hasEarlyTask(s) { for (let k in s.days) { if (s.days[k].tasks.some(t => t.done && t.timeStart && t.timeStart < '08:00')) return true; } return false; }
@@ -545,9 +550,7 @@ function hasEarlyTask(s) { for (let k in s.days) { if (s.days[k].tasks.some(t =>
 function checkBadges() {
   BADGES.forEach(b => {
     if (!state.unlockedBadges.includes(b.id) && b.cond(state)) {
-      state.unlockedBadges.push(b.id);
-      fireConfetti();
-      setTimeout(() => alert(`🏆 Достижение: ${b.name}!`), 300);
+      state.unlockedBadges.push(b.id); fireConfetti(); setTimeout(() => alert(`🏆 Достижение: ${b.name}!`), 300);
     }
   });
   save();
@@ -562,58 +565,76 @@ function checkStreak() {
   }
 }
 
-// --- Логика модалок ---
-document.getElementById('fabAdd').onclick = () => document.getElementById('modalAdd').classList.add('open');
-document.getElementById('modalSave').onclick = () => {
-  const text = document.getElementById('taskInput').value.trim();
-  if (!text) return;
-  getDay(activeDate).tasks.push({
-    id: Date.now().toString(), text,
-    timeStart: document.getElementById('timeStart').value || null,
-    timeEnd: document.getElementById('timeEnd').value || null,
-    done: false
-  });
-  save(); render();
+// Выбор сложности
+let selectedDiff = 1;
+document.querySelectorAll('.diff-opt').forEach(opt => {
+  opt.onclick = () => {
+    document.querySelectorAll('.diff-opt').forEach(o => o.classList.remove('active'));
+    opt.classList.add('active');
+    selectedDiff = parseInt(opt.dataset.val);
+  };
+});
+
+// Модалки
+document.getElementById('fabAdd').onclick = () => {
   document.getElementById('taskInput').value = '';
-  document.getElementById('modalAdd').classList.remove('open');
-  tg?.HapticFeedback?.notificationOccurred('success');
+  document.getElementById('timeStart').value = '';
+  document.getElementById('timeEnd').value = '';
+  document.querySelectorAll('.diff-opt').forEach(o => o.classList.remove('active'));
+  document.querySelector('.diff-opt[data-val="1"]').classList.add('active');
+  selectedDiff = 1;
+  document.getElementById('modalAdd').classList.add('open');
 };
 
-// Рефлексия (открывается, если все задачи выполнены)
-// Для теста можно вызывать вручную (например, при нажатии на график)
+document.getElementById('modalSave').onclick = () => {
+  const text = document.getElementById('taskInput').value.trim(); if (!text) return;
+  getDay(activeDate).tasks.push({
+    id: Date.now().toString(), text, diff: selectedDiff,
+    timeStart: document.getElementById('timeStart').value || null,
+    timeEnd: document.getElementById('timeEnd').value || null, done: false
+  });
+  save(); render(); document.getElementById('modalAdd').classList.remove('open'); tg?.HapticFeedback?.notificationOccurred('success');
+};
+
+// Сохранение переноса
+document.getElementById('modalMoveSave').onclick = () => {
+  if (!currentTaskToMove) return;
+  const day = getDay(activeDate);
+  const tomorrow = new Date(activeDate + 'T00:00:00');
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tKey = dateKey(tomorrow);
+  
+  // Обновляем время, если изменили
+  currentTaskToMove.timeStart = document.getElementById('moveTimeStart').value || null;
+  currentTaskToMove.timeEnd = document.getElementById('moveTimeEnd').value || null;
+
+  // Удаляем из текущего, добавляем в завтра
+  day.tasks = day.tasks.filter(x => x.id !== currentTaskToMove.id);
+  getDay(tKey).tasks.push(currentTaskToMove);
+  
+  save(); render(); document.getElementById('modalMove').classList.remove('open'); tg?.HapticFeedback?.notificationOccurred('success');
+};
+
+// Рефлексия
 document.getElementById('chart').onclick = () => {
   document.getElementById('modalMood').classList.add('open');
   document.querySelectorAll('.mood-opt').forEach(o => o.classList.remove('active'));
   selectedMood = ''; document.getElementById('moodText').value = '';
 };
-
 document.querySelectorAll('.mood-opt').forEach(opt => {
-  opt.onclick = () => {
-    document.querySelectorAll('.mood-opt').forEach(o => o.classList.remove('active'));
-    opt.classList.add('active');
-    selectedMood = opt.dataset.mood;
-  };
+  opt.onclick = () => { document.querySelectorAll('.mood-opt').forEach(o => o.classList.remove('active')); opt.classList.add('active'); selectedMood = opt.dataset.mood; };
 });
-
 document.getElementById('modalMoodSave').onclick = () => {
   if (!selectedMood) return;
   if (!state.diaries) state.diaries = {};
   state.diaries[todayKey()] = { mood: selectedMood, text: document.getElementById('moodText').value };
-  save(); render();
-  document.getElementById('modalMood').classList.remove('open');
-  fireConfetti();
+  save(); render(); document.getElementById('modalMood').classList.remove('open'); fireConfetti();
 };
-
-// Энергия
-document.querySelectorAll('.energy-btn').forEach(btn => {
-  btn.onclick = () => { getDay(activeDate).energy = btn.dataset.energy; save(); render(); tg?.HapticFeedback?.impactOccurred('light'); };
-});
 
 // Навигация
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.onclick = () => {
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
     if (btn.dataset.target === 'progress') {
       document.getElementById('screen-plan').classList.add('hidden');
       document.getElementById('screen-progress').classList.remove('hidden');
@@ -627,60 +648,39 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   };
 });
 
-// --- Фокус таймер ---
+// Фокус таймер
 let focusInterval, focusTimeLeft = 25 * 60;
 function startFocus(taskName) {
   document.getElementById('focusTaskName').textContent = taskName;
   document.getElementById('focusOverlay').classList.add('open');
-  focusTimeLeft = 25 * 60;
-  updateFocusTimer();
-  clearInterval(focusInterval);
+  focusTimeLeft = 25 * 60; updateFocusTimer(); clearInterval(focusInterval);
   focusInterval = setInterval(() => {
-    focusTimeLeft--;
-    updateFocusTimer();
+    focusTimeLeft--; updateFocusTimer();
     if (focusTimeLeft <= 0) {
-      clearInterval(focusInterval);
-      tg?.HapticFeedback?.notificationOccurred('success');
-      fireConfetti();
-      document.getElementById('focusOverlay').classList.remove('open');
-      alert('Фокус завершен! 25 минут прошли.');
+      clearInterval(focusInterval); tg?.HapticFeedback?.notificationOccurred('success'); fireConfetti();
+      document.getElementById('focusOverlay').classList.remove('open'); alert('Фокус завершен! 25 минут прошли.');
     }
   }, 1000);
 }
-function updateFocusTimer() {
-  document.getElementById('focusTime').textContent = `${pad(Math.floor(focusTimeLeft/60))}:${pad(focusTimeLeft%60)}`;
-}
-document.getElementById('focusStop').onclick = () => {
-  clearInterval(focusInterval);
-  document.getElementById('focusOverlay').classList.remove('open');
-};
+function updateFocusTimer() { document.getElementById('focusTime').textContent = `${pad(Math.floor(focusTimeLeft/60))}:${pad(focusTimeLeft%60)}`; }
+document.getElementById('focusStop').onclick = () => { clearInterval(focusInterval); document.getElementById('focusOverlay').classList.remove('open'); };
 
-// --- Конфетти (Мини-движок) ---
-const canvas = document.getElementById('confetti');
-const ctx = canvas.getContext('2d');
-let particles = [];
+// Конфетти
+const canvas = document.getElementById('confetti'); const ctx = canvas.getContext('2d'); let particles = [];
 function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 window.addEventListener('resize', resizeCanvas); resizeCanvas();
-
 function fireConfetti() {
   const colors = ['#7C3AED', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
   for (let i = 0; i < 50; i++) {
-    particles.push({
-      x: window.innerWidth / 2, y: window.innerHeight / 2,
-      vx: (Math.random() - 0.5) * 15, vy: (Math.random() - 0.5) * 15 - 5,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      size: Math.random() * 6 + 4, life: 1
-    });
+    particles.push({ x: window.innerWidth / 2, y: window.innerHeight / 2, vx: (Math.random() - 0.5) * 15, vy: (Math.random() - 0.5) * 15 - 5, color: colors[Math.floor(Math.random() * colors.length)], size: Math.random() * 6 + 4, life: 1 });
   }
   if (particles.length === 50) requestAnimationFrame(updateConfetti);
 }
-
 function updateConfetti() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  particles.forEach((p, i) => {
+  particles.forEach(p => {
     p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.life -= 0.015;
-    ctx.globalAlpha = Math.max(0, p.life);
-    ctx.fillStyle = p.color;
+    ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.color;
     ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
   });
   particles = particles.filter(p => p.life > 0);
@@ -688,7 +688,6 @@ function updateConfetti() {
   else ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-// Запуск
 render();
 </script>
 </body>
