@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="ru" class="dark">
 <head>
@@ -202,7 +201,7 @@
                 <div class="flex items-center gap-1.5">
                     <span class="text-[11px] font-extrabold uppercase tracking-wider text-indigo-300">План дня</span>
                     <span class="text-white/30 text-xs">•</span>
-                    <span id="header-date-sub" class="text-xs font-semibold text-white/90 truncate">Ср, 25 ноября</span>
+                    <span id="header-date-sub" class="text-xs font-semibold text-white/90 truncate">Чт, 26 ноября</span>
                 </div>
                 <h1 id="header-main-title" class="text-2xl sm:text-[26px] font-black tracking-tight text-white leading-tight mt-0.5 truncate">
                     Сегодня
@@ -267,19 +266,19 @@
         </section>
 
         <!-- ===================================================================== -->
-        <!-- 3. ЧЕК-ИН «РЕСУРС СЕЙЧАС»                                             -->
+        <!-- 3. ЧЕК-ИН «РЕСУРС СЕЙЧАС» (РОВНАЯ СЕТКА НА ВЕСЬ ЭКРАН)                -->
         <!-- ===================================================================== -->
         <section class="glass-card rounded-2xl p-3 mb-4">
-            <div class="flex items-center justify-between gap-2">
-                <span class="text-xs font-bold text-white pl-1 whitespace-nowrap">Ресурс сейчас:</span>
-                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar" id="energy-buttons">
-                    <button type="button" data-energy="high" onclick="setEnergyLevel('high')" class="energy-btn px-2.5 py-1.5 rounded-xl text-xs font-bold transition-transform active:scale-95 flex items-center gap-1 border border-transparent whitespace-nowrap">
+            <div class="flex flex-col gap-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-white/90 px-0.5">Ресурс сейчас:</span>
+                <div class="grid grid-cols-3 gap-1.5" id="energy-buttons">
+                    <button type="button" data-energy="high" onclick="setEnergyLevel('high')" class="energy-btn py-2 px-2 rounded-xl text-xs font-bold transition-transform active:scale-95 flex items-center justify-center gap-1 border border-transparent whitespace-nowrap">
                         <span>🔥</span><span>На заряде</span>
                     </button>
-                    <button type="button" data-energy="normal" onclick="setEnergyLevel('normal')" class="energy-btn px-2.5 py-1.5 rounded-xl text-xs font-bold transition-transform active:scale-95 flex items-center gap-1 border border-transparent whitespace-nowrap">
+                    <button type="button" data-energy="normal" onclick="setEnergyLevel('normal')" class="energy-btn py-2 px-2 rounded-xl text-xs font-bold transition-transform active:scale-95 flex items-center justify-center gap-1 border border-transparent whitespace-nowrap">
                         <span>😐</span><span>Норм</span>
                     </button>
-                    <button type="button" data-energy="low" onclick="setEnergyLevel('low')" class="energy-btn px-2.5 py-1.5 rounded-xl text-xs font-bold transition-transform active:scale-95 flex items-center gap-1 border border-transparent whitespace-nowrap">
+                    <button type="button" data-energy="low" onclick="setEnergyLevel('low')" class="energy-btn py-2 px-2 rounded-xl text-xs font-bold transition-transform active:scale-95 flex items-center justify-center gap-1 border border-transparent whitespace-nowrap">
                         <span>🪫</span><span>На нуле</span>
                     </button>
                 </div>
@@ -669,7 +668,7 @@
 
         /**
          * =====================================================================
-         * 2. КОНСТАНТЫ, СОСТОЯНИЕ И LOCALSTORAGE
+         * 2. КОНСТАНТЫ, СОСТОЯНИЕ И НАДЁЖНОЕ ХРАНИЛИЩЕ (LOCAL + CLOUDSTORAGE)
          * =====================================================================
          */
         const STORAGE_TASKS = 'plan_pro_tasks_v1';
@@ -714,181 +713,89 @@
             { id: 'r_water', emoji: '💧', title: 'Выпить воды', time: '', category: 'Личное', isMicro: true }
         ];
 
+        // Кэш в памяти, чтобы интерфейс работал мгновенно и не терял данные даже при сбоях WebView
+        let memoryTasksMap = null;
+        let memoryRoutines = null;
+
+        function safeLocalGet(key) {
+            try {
+                return localStorage.getItem(key);
+            } catch (_) {
+                return null;
+            }
+        }
+
+        function safeLocalSet(key, val) {
+            try {
+                localStorage.setItem(key, val);
+            } catch (e) {
+                console.warn('localStorage write warning:', e);
+            }
+        }
+
+        // Синхронизация в облако Telegram (не сбрасывается при закрытии мини-приложения)
+        function syncToTelegramCloud(key, val) {
+            if (!tg || !tg.CloudStorage || typeof tg.CloudStorage.setItem !== 'function') return;
+            try {
+                if (val.length <= 4096) {
+                    tg.CloudStorage.setItem(key, val);
+                }
+            } catch (_) {}
+        }
+
+        function hydrateFromTelegramCloud() {
+            if (!tg || !tg.CloudStorage || typeof tg.CloudStorage.getItems !== 'function') return;
+            try {
+                tg.CloudStorage.getItems([STORAGE_TASKS, STORAGE_ROUTINES, STORAGE_ENERGY], (err, values) => {
+                    if (err || !values) return;
+                    let changed = false;
+
+                    if (values[STORAGE_TASKS]) {
+                        try {
+                            const cloudTasks = JSON.parse(values[STORAGE_TASKS]);
+                            const localRaw = safeLocalGet(STORAGE_TASKS);
+                            const localTasks = localRaw ? JSON.parse(localRaw) : {};
+                            // Если локально пусто или в облаке есть данные — объединяем
+                            if (Object.keys(cloudTasks).length > 0 && Object.keys(localTasks).length === 0) {
+                                memoryTasksMap = cloudTasks;
+                                safeLocalSet(STORAGE_TASKS, values[STORAGE_TASKS]);
+                                changed = true;
+                            }
+                        } catch (_) {}
+                    }
+
+                    if (values[STORAGE_ROUTINES]) {
+                        try {
+                            const cloudRoutines = JSON.parse(values[STORAGE_ROUTINES]);
+                            if (Array.isArray(cloudRoutines) && cloudRoutines.length > 0) {
+                                memoryRoutines = cloudRoutines;
+                                safeLocalSet(STORAGE_ROUTINES, values[STORAGE_ROUTINES]);
+                                changed = true;
+                            }
+                        } catch (_) {}
+                    }
+
+                    if (values[STORAGE_ENERGY] && !safeLocalGet(STORAGE_ENERGY)) {
+                        currentEnergy = values[STORAGE_ENERGY];
+                        safeLocalSet(STORAGE_ENERGY, currentEnergy);
+                        changed = true;
+                    }
+
+                    if (changed) {
+                        renderEnergyUI();
+                        renderHeaderAndDateStrip();
+                        renderRoutinesStrip();
+                        renderTasksAndTimeline();
+                    }
+                });
+            } catch (_) {}
+        }
+
         function getLocalDateStr(dateObj = new Date()) {
             const y = dateObj.getFullYear();
             const m = String(dateObj.getMonth() + 1).padStart(2, '0');
             const d = String(dateObj.getDate()).padStart(2, '0');
-            return `${y}-${m}-${d}`;
-        }
-
-        function parseLocalDate(str) {
-            const [y, m, d] = str.split('-').map(Number);
-            return new Date(y, m - 1, d);
-        }
-
-        let selectedDateStr = getLocalDateStr(new Date());
-        let selectedCategory = 'Дела';
-        let isNoTimeMode = false;
-        let currentEnergy = localStorage.getItem(STORAGE_ENERGY) || 'normal';
-
-        // Переменные фокус-таймера (120 FPS)
-        let focusTaskId = null;
-        let focusTotalSec = 15 * 60;
-        let focusRemainingSec = 15 * 60;
-        let focusEndTimestamp = 0;
-        let focusRafId = null;
-        let isFocusRunning = false;
-        let lastSecondShown = -1;
-
-        function loadTasksMap() {
-            try {
-                const raw = localStorage.getItem(STORAGE_TASKS);
-                return raw ? JSON.parse(raw) : {};
-            } catch (_) {
-                return {};
-            }
-        }
-
-        function saveTasksMap(map) {
-            localStorage.setItem(STORAGE_TASKS, JSON.stringify(map));
-        }
-
-        function loadRoutines() {
-            try {
-                const raw = localStorage.getItem(STORAGE_ROUTINES);
-                if (!raw) {
-                    localStorage.setItem(STORAGE_ROUTINES, JSON.stringify(DEFAULT_ROUTINES));
-                    return [...DEFAULT_ROUTINES];
-                }
-                return JSON.parse(raw);
-            } catch (_) {
-                return [...DEFAULT_ROUTINES];
-            }
-        }
-
-        function saveRoutines(list) {
-            localStorage.setItem(STORAGE_ROUTINES, JSON.stringify(list));
-        }
-
-        function seedDemoIfEmpty() {
-            const map = loadTasksMap();
-            if (Object.keys(map).length > 0) return;
-
-            const todayStr = getLocalDateStr(new Date());
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = getLocalDateStr(yesterday);
-
-            map[yesterdayStr] = [
-                {
-                    id: 'seed_y1',
-                    title: 'Застелить кровать',
-                    startTime: '09:00',
-                    endTime: '',
-                    noTime: false,
-                    category: 'Личное',
-                    isMicro: true,
-                    completed: true
-                }
-            ];
-
-            map[todayStr] = [
-                {
-                    id: 'seed_1',
-                    title: 'Застелить кровать и проветрить комнату',
-                    startTime: '09:00',
-                    endTime: '09:15',
-                    noTime: false,
-                    category: 'Личное',
-                    isMicro: true,
-                    completed: true
-                },
-                {
-                    id: 'seed_2',
-                    title: 'Учёба 30 мин — разобрать конспект',
-                    startTime: '15:00',
-                    endTime: '15:30',
-                    noTime: false,
-                    category: 'Учёба',
-                    isMicro: true,
-                    completed: false
-                },
-                {
-                    id: 'seed_3',
-                    title: 'Тренировка в зале',
-                    startTime: '18:30',
-                    endTime: '19:45',
-                    noTime: false,
-                    category: 'Зал',
-                    isMicro: false,
-                    completed: false
-                },
-                {
-                    id: 'seed_4',
-                    title: 'Выпить 2 стакана воды',
-                    startTime: '',
-                    endTime: '',
-                    noTime: true,
-                    category: 'Личное',
-                    isMicro: true,
-                    completed: false
-                }
-            ];
-            saveTasksMap(map);
-        }
-
-        /**
-         * =====================================================================
-         * 3. РАСЧЁТ СЕРИИ ДНЕЙ (🔥 STREAK) И СТАТИСТИКА ЗА 7 ДНЕЙ
-         * =====================================================================
-         */
-        function hasCompletedTaskOnDate(map, dateStr) {
-            const tasks = map[dateStr] || [];
-            return tasks.some(t => t.completed);
-        }
-
-        function calculateStreak() {
-            const map = loadTasksMap();
-            let streak = 0;
-            const cursor = new Date();
-            const todayStr = getLocalDateStr(cursor);
-
-            // Если сегодня ещё не закрыли задачу, проверяем со вчера, чтобы стрик не обнулялся до конца дня
-            if (!hasCompletedTaskOnDate(map, todayStr)) {
-                cursor.setDate(cursor.getDate() - 1);
-            }
-
-            while (true) {
-                const dStr = getLocalDateStr(cursor);
-                if (hasCompletedTaskOnDate(map, dStr)) {
-                    streak++;
-                    cursor.setDate(cursor.getDate() - 1);
-                } else {
-                    break;
-                }
-            }
-            return streak;
-        }
-
-        function getDayPlural(n) {
-            const mod10 = n % 10;
-            const mod100 = n % 100;
-            if (mod10 === 1 && mod100 !== 11) return 'день подряд';
-            if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'дня подряд';
-            return 'дней подряд';
-        }
-
-        function openStreakModal() {
-            const streak = calculateStreak();
-            const map = loadTasksMap();
-
-            document.getElementById('streak-modal-days').textContent = streak;
-            document.getElementById('streak-modal-word').textContent = getDayPlural(streak);
-
-            // Следующая цель
-            const milestones = [3, 7, 14, 21, 30, 60, 100];
-            const nextGoal = milestones.find(m => m > streak) || (streak + 10);
-            document.getElementById('streak-next-goal').textContent = `${nextGoal} дн. 🔥`;
+            return `${y}-${m}-${d}`; }  function parseLocalDate(str) { const [y, m, d] = str.split('-').map(Number); return new Date(y, m - 1, d); }  let selectedDateStr = getLocalDateStr(new Date()); let selectedCategory = 'Дела'; let isNoTimeMode = false; let currentEnergy = safeLocalGet(STORAGE_ENERGY) \vert{}\vert{} 'normal';  // Переменные фокус-таймера (120 FPS) let focusTaskId = null; let focusTotalSec = 15 * 60; let focusRemainingSec = 15 * 60; let focusEndTimestamp = 0; let focusRafId = null; let isFocusRunning = false; let lastSecondShown = -1;  function loadTasksMap() { if (memoryTasksMap !== null) return memoryTasksMap; try { const raw = safeLocalGet(STORAGE_TASKS); memoryTasksMap = raw ? JSON.parse(raw) : {}; } catch (_) { memoryTasksMap = {}; } return memoryTasksMap; }  function saveTasksMap(map) { memoryTasksMap = map; const serialized = JSON.stringify(map); safeLocalSet(STORAGE_TASKS, serialized); syncToTelegramCloud(STORAGE_TASKS, serialized); }  function loadRoutines() { if (memoryRoutines !== null) return memoryRoutines; try { const raw = safeLocalGet(STORAGE_ROUTINES); if (!raw) { memoryRoutines = [...DEFAULT_ROUTINES]; const serialized = JSON.stringify(memoryRoutines); safeLocalSet(STORAGE_ROUTINES, serialized); return memoryRoutines; } memoryRoutines = JSON.parse(raw); return memoryRoutines; } catch (_) { memoryRoutines = [...DEFAULT_ROUTINES]; return memoryRoutines; } }  function saveRoutines(list) { memoryRoutines = list; const serialized = JSON.stringify(list); safeLocalSet(STORAGE_ROUTINES, serialized); syncToTelegramCloud(STORAGE_ROUTINES, serialized); }  function seedDemoIfEmpty() { const map = loadTasksMap(); if (Object.keys(map).length > 0) return;  const todayStr = getLocalDateStr(new Date()); const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1); const yesterdayStr = getLocalDateStr(yesterday);  map[yesterdayStr] = [ { id: 'seed_y1', title: 'Застелить кровать', startTime: '09:00', endTime: '', noTime: false, category: 'Личное', isMicro: true, completed: true } ];  map[todayStr] = [ { id: 'seed_1', title: 'Застелить кровать и проветрить комнату', startTime: '09:00', endTime: '09:15', noTime: false, category: 'Личное', isMicro: true, completed: true }, { id: 'seed_2', title: 'Учёба 30 мин — разобрать конспект', startTime: '15:00', endTime: '15:30', noTime: false, category: 'Учёба', isMicro: true, completed: false }, { id: 'seed_3', title: 'Тренировка в зале', startTime: '18:30', endTime: '19:45', noTime: false, category: 'Зал', isMicro: false, completed: false }, { id: 'seed_4', title: 'Выпить 2 стакана воды', startTime: '', endTime: '', noTime: true, category: 'Личное', isMicro: true, completed: false } ]; saveTasksMap(map); }  /** * ===================================================================== * 3. РАСЧЁТ СЕРИИ ДНЕЙ (🔥 STREAK) И СТАТИСТИКА ЗА 7 ДНЕЙ * ===================================================================== */ function hasCompletedTaskOnDate(map, dateStr) { const tasks = map[dateStr] \vert{}\vert{} []; return tasks.some(t => t.completed); }  function calculateStreak() { const map = loadTasksMap(); let streak = 0; const cursor = new Date(); const todayStr = getLocalDateStr(cursor);  // Если сегодня ещё не закрыли задачу, проверяем со вчера, чтобы стрик не обнулялся до конца дня if (!hasCompletedTaskOnDate(map, todayStr)) { cursor.setDate(cursor.getDate() - 1); }  while (true) { const dStr = getLocalDateStr(cursor); if (hasCompletedTaskOnDate(map, dStr)) { streak++; cursor.setDate(cursor.getDate() - 1); } else { break; } } return streak; }  function getDayPlural(n) { const mod10 = n \% 10; const mod100 = n \% 100; if (mod10 === 1 && mod100 !== 11) return 'день подряд'; if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 \vert{}\vert{} mod100 >= 20)) return 'дня подряд'; return 'дней подряд'; }  function openStreakModal() { const streak = calculateStreak(); const map = loadTasksMap();  document.getElementById('streak-modal-days').textContent = streak; document.getElementById('streak-modal-word').textContent = getDayPlural(streak);  // Следующая цель const milestones = [3, 7, 14, 21, 30, 60, 100]; const nextGoal = milestones.find(m => m > streak) \vert{}\vert{} (streak + 10); document.getElementById('streak-next-goal').textContent = `${nextGoal} дн. 🔥`;
 
             // Сетка последних 7 дней
             const grid = document.getElementById('streak-7days-grid');
@@ -918,95 +825,15 @@
 
             grid.innerHTML = '';
             grid.appendChild(frag);
-            document.getElementById('streak-7d-summary').textContent = `${activeDaysCount} из 7 активных`;
-
-            document.getElementById('streak-modal').classList.add('active');
-            triggerHaptic('light');
-        }
-
-        /**
-         * =====================================================================
-         * 4. ЧЕК-ИН «РЕСУРС СЕЙЧАС»
-         * =====================================================================
-         */
-        function setEnergyLevel(level) {
-            currentEnergy = level;
-            localStorage.setItem(STORAGE_ENERGY, level);
-            renderEnergyUI();
-            renderTasksAndTimeline();
-            triggerHaptic('light');
-        }
-
-        function renderEnergyUI() {
-            const buttons = document.querySelectorAll('.energy-btn');
-            buttons.forEach(btn => {
-                const lvl = btn.dataset.energy;
-                const active = lvl === currentEnergy;
-                if (active) {
-                    if (lvl === 'high') {
-                        btn.className = 'energy-btn px-2.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1 bg-amber-500/25 text-white border border-amber-400/55 transition-transform active:scale-95 whitespace-nowrap';
-                    } else if (lvl === 'low') {
-                        btn.className = 'energy-btn px-2.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1 bg-emerald-500/25 text-white border border-emerald-400/55 transition-transform active:scale-95 whitespace-nowrap';
-                    } else {
-                        btn.className = 'energy-btn px-2.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1 bg-indigo-500/25 text-white border border-indigo-400/55 transition-transform active:scale-95 whitespace-nowrap';
-                    }
-                } else {
-                    btn.className = 'energy-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 bg-white/5 text-zinc-300 border border-transparent hover:text-white transition-transform active:scale-95 whitespace-nowrap';
-                }
-            });
-
-            const hint = document.getElementById('low-energy-hint');
-            if (currentEnergy === 'low') {
-                hint.classList.remove('hidden');
-            } else {
-                hint.classList.add('hidden');
-            }
-        }
-
-        /**
-         * =====================================================================
-         * 5. ШАПКА, КОНТРАСТНАЯ ЛЕНТА ДАТ (ВЧЕРА, СЕГОДНЯ, +10 ДНЕЙ) И ПРОГРЕСС
-         * =====================================================================
-         */
-        function renderHeaderAndDateStrip() {
-            const today = new Date();
-            const todayStr = getLocalDateStr(today);
-
-            const yesterday = new Date();
-            yesterday.setDate(today.getDate() - 1);
-            const yesterdayStr = getLocalDateStr(yesterday);
-
-            const tomorrow = new Date();
-            tomorrow.setDate(today.getDate() + 1);
-            const tomorrowStr = getLocalDateStr(tomorrow);
-
-            const selDate = parseLocalDate(selectedDateStr);
-            const dayNum = selDate.getDate();
-            const monthWord = MONTHS_GEN[selDate.getMonth()];
-            const weekWord = DAYS_SHORT[selDate.getDay()];
-
-            const mainTitle = document.getElementById('header-main-title');
-            const subDate = document.getElementById('header-date-sub');
-            const backTodayBtn = document.getElementById('btn-back-today');
-
-            document.getElementById('header-calendar-input').value = selectedDateStr;
-
-            // Ярко-белый заголовок выбранного дня
-            if (selectedDateStr === todayStr) {
-                mainTitle.textContent = 'Сегодня';
-                subDate.textContent = `${weekWord}, ${dayNum} ${monthWord}`;
+            document.getElementById('streak-7d-summary').textContent = `${activeDaysCount} из 7 активных`;  document.getElementById('streak-modal').classList.add('active'); triggerHaptic('light'); }  /** * ===================================================================== * 4. ЧЕК-ИН «РЕСУРС СЕЙЧАС» * ===================================================================== */ function setEnergyLevel(level) { currentEnergy = level; safeLocalSet(STORAGE_ENERGY, level); syncToTelegramCloud(STORAGE_ENERGY, level); renderEnergyUI(); renderTasksAndTimeline(); triggerHaptic('light'); }  function renderEnergyUI() { const buttons = document.querySelectorAll('.energy-btn'); buttons.forEach(btn => { const lvl = btn.dataset.energy; const active = lvl === currentEnergy; if (active) { if (lvl === 'high') { btn.className = 'energy-btn py-2 px-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1 bg-amber-500/25 text-white border border-amber-400/55 transition-transform active:scale-95 whitespace-nowrap'; } else if (lvl === 'low') { btn.className = 'energy-btn py-2 px-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1 bg-emerald-500/25 text-white border border-emerald-400/55 transition-transform active:scale-95 whitespace-nowrap'; } else { btn.className = 'energy-btn py-2 px-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1 bg-indigo-500/25 text-white border border-indigo-400/55 transition-transform active:scale-95 whitespace-nowrap'; } } else { btn.className = 'energy-btn py-2 px-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 bg-white/5 text-zinc-300 border border-transparent hover:text-white transition-transform active:scale-95 whitespace-nowrap'; } });  const hint = document.getElementById('low-energy-hint'); if (currentEnergy === 'low') { hint.classList.remove('hidden'); } else { hint.classList.add('hidden'); } }  /** * ===================================================================== * 5. ШАПКА, КОНТРАСТНАЯ ЛЕНТА ДАТ (ВЧЕРА, СЕГОДНЯ, +10 ДНЕЙ) И ПРОГРЕСС * ===================================================================== */ function renderHeaderAndDateStrip() { const today = new Date(); const todayStr = getLocalDateStr(today);  const yesterday = new Date(); yesterday.setDate(today.getDate() - 1); const yesterdayStr = getLocalDateStr(yesterday);  const tomorrow = new Date(); tomorrow.setDate(today.getDate() + 1); const tomorrowStr = getLocalDateStr(tomorrow);  const selDate = parseLocalDate(selectedDateStr); const dayNum = selDate.getDate(); const monthWord = MONTHS_GEN[selDate.getMonth()]; const weekWord = DAYS_SHORT[selDate.getDay()];  const mainTitle = document.getElementById('header-main-title'); const subDate = document.getElementById('header-date-sub'); const backTodayBtn = document.getElementById('btn-back-today');  document.getElementById('header-calendar-input').value = selectedDateStr;  // Ярко-белый заголовок выбранного дня if (selectedDateStr === todayStr) { mainTitle.textContent = 'Сегодня'; subDate.textContent = `${weekWord}, ${dayNum}${monthWord}`;
                 backTodayBtn.classList.add('hidden');
             } else if (selectedDateStr === tomorrowStr) {
                 mainTitle.textContent = 'Завтра';
-                subDate.textContent = `${weekWord}, ${dayNum} ${monthWord}`;
-                backTodayBtn.classList.remove('hidden');
-            } else if (selectedDateStr === yesterdayStr) {
-                mainTitle.textContent = 'Вчера';
-                subDate.textContent = `${weekWord}, ${dayNum} ${monthWord}`;
+                subDate.textContent = `${weekWord},${dayNum} ${monthWord}`; backTodayBtn.classList.remove('hidden'); } else if (selectedDateStr === yesterdayStr) { mainTitle.textContent = 'Вчера'; subDate.textContent = `${weekWord}, ${dayNum}${monthWord}`;
                 backTodayBtn.classList.remove('hidden');
             } else {
-                mainTitle.textContent = `${dayNum} ${monthWord}`;
-                subDate.textContent = `${weekWord}, ${selDate.getFullYear()}`;
+                mainTitle.textContent = `${dayNum}${monthWord}`;
+                subDate.textContent = `${weekWord},${selDate.getFullYear()}`;
                 backTodayBtn.classList.remove('hidden');
             }
 
@@ -1052,7 +879,6 @@
                     statusDot = `<span class="w-1.5 h-1.5 rounded-full mt-1 ${isSelected ? 'bg-emerald-200' : 'bg-emerald-400'}"></span>`;
                 }
 
-                // Все подписи дней недели и чисел — чёткого белого цвета
                 btn.innerHTML = `
                     <span class="text-[10.5px] font-extrabold text-white tracking-tight leading-none">
                         ${topText}
@@ -1094,7 +920,7 @@
 
             document.getElementById('header-progress-ring').style.strokeDashoffset = offset;
             document.getElementById('header-progress-pct').textContent = `${pct}%`;
-            document.getElementById('tasks-summary-badge').textContent = `${completed} / ${total}`;
+            document.getElementById('tasks-summary-badge').textContent = `${completed} /${total}`;
 
             const clearBtn = document.getElementById('btn-clear-done');
             if (completed > 0) {
@@ -1293,15 +1119,13 @@
         function buildTaskCard(task, onTimeline) {
             const cat = CATEGORY_META[task.category] || CATEGORY_META['Личное'];
             const timeLabel = (!task.noTime && task.startTime)
-                ? (task.endTime ? `${task.startTime} – ${task.endTime}` : task.startTime)
+                ? (task.endTime ? `${task.startTime} –${task.endTime}` : task.startTime)
                 : 'Без времени';
 
             const highlightMicro = currentEnergy === 'low' && task.isMicro && !task.completed;
 
             const card = document.createElement('div');
-            card.className = `relative glass-card rounded-2xl p-3.5 transition-transform duration-150 overflow-hidden ${
-                task.completed ? 'task-completed opacity-80' : ''
-            } ${highlightMicro ? 'micro-step-glow' : ''}`;
+            card.className = `relative glass-card rounded-2xl p-3.5 transition-transform duration-150 overflow-hidden ${ task.completed ? 'task-completed opacity-80' : '' } ${highlightMicro ? 'micro-step-glow' : ''}`;
 
             // Узел на вертикальной шкале таймлайна
             const timelineDotHtml = onTimeline
@@ -1438,7 +1262,7 @@
 
         /**
          * =====================================================================
-         * 8. МОДАЛКА ДОБАВЛЕНИЯ / РЕДАКТИРОВАНИЯ ЗАДАЧИ
+         * 8. МОДАЛКА ДОБАВЛЕНИЯ / РЕДАКТИРОВАНИЕ ЗАДАЧИ
          * =====================================================================
          */
         function openTaskModal(editTaskId = null) {
@@ -1705,8 +1529,7 @@
 
             canvas.width = window.innerWidth * dpr;
             canvas.height = window.innerHeight * dpr;
-            canvas.style.width = `${window.innerWidth}px`;
-            canvas.style.height = `${window.innerHeight}px`;
+            canvas.style.width = `${window.innerWidth}px`; canvas.style.height = `${window.innerHeight}px`;
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
             if (confettiRaf) cancelAnimationFrame(confettiRaf);
@@ -1737,7 +1560,7 @@
                     const p = pieces[i];
                     p.x += p.vx * dt;
                     p.y += p.vy * dt;
-                    p.vy += 1200 * dt; // физика, независимая от герцовки экрана (60/90/120 Гц)
+                    p.vy += 1200 * dt;
                     p.angle += p.spin * dt;
 
                     ctx.save();
@@ -1806,13 +1629,13 @@
             }
         }, 60000);
 
-        // Запуск приложения
+        // Запуск приложения и подтяжка резервной копии из Telegram CloudStorage
         seedDemoIfEmpty();
         renderEnergyUI();
         renderHeaderAndDateStrip();
         renderRoutinesStrip();
         renderTasksAndTimeline();
+        hydrateFromTelegramCloud();
     </script>
 </body>
-</html>
-```
+    </html>
