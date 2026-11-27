@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1" />
 <meta name="theme-color" content="#05050A" />
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-<title>Aura 7.0</title>
+<title>Aura 9.0</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 :root {
@@ -16,6 +16,7 @@
 }
 [data-theme="emerald"] { --bg: #04120E; --accent-1: #10B981; --accent-2: #3B82F6; }
 [data-theme="sunset"] { --bg: #120804; --accent-1: #F97316; --accent-2: #E11D48; }
+[data-theme="pink"] { --bg: #0F0412; --accent-1: #FF007F; --accent-2: #FF8C00; --water: #FF007F; }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
@@ -26,7 +27,6 @@ body {
   background-attachment: fixed; color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   padding: 20px 20px calc(var(--nav-height) + 40px); min-height: 100vh; max-width: 520px; margin: 0 auto; overflow-x: hidden;
-  transition: background-color 0.5s;
 }
 .hidden { display: none !important; }
 
@@ -45,18 +45,14 @@ body {
 .progress-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 13px; font-weight: 700; }
 
 /* --- Quote --- */
-.quote-box { 
-  padding: 16px 16px 16px 20px; margin-bottom: 20px; font-size: 14px; color: var(--text); 
-  line-height: 1.5; background: var(--surface); border: 1px solid var(--border);
-  border-left: 4px solid var(--accent-1); border-radius: var(--radius); font-style: italic;
-}
+.quote-box { padding: 16px 16px 16px 20px; margin-bottom: 20px; font-size: 14px; color: var(--text); line-height: 1.5; background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent-1); border-radius: var(--radius); font-style: italic; }
 .quote-author { display: block; margin-top: 8px; font-size: 12px; color: var(--accent-2); font-weight: 600; font-style: normal; text-align: right; }
 
 /* --- Horizontal Dates --- */
 .date-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px; scrollbar-width: none; }
 .date-scroll::-webkit-scrollbar { display: none; }
-.date-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; min-width: 64px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: background 0.3s, border-color 0.3s; }
-.date-chip.active { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); border-color: transparent; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4); }
+.date-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; min-width: 64px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s; }
+.date-chip.active { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); border-color: transparent; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3); }
 .date-chip .d-name { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
 .date-chip.active .d-name { color: rgba(255,255,255,0.9); }
 .date-chip .d-num { font-size: 20px; font-weight: 800; }
@@ -67,62 +63,42 @@ body {
 .energy-btn .emoji { font-size: 20px; }
 .energy-btn.active { background: var(--surface-hover); border-color: rgba(255,255,255,0.2); color: var(--text); transform: scale(0.95); }
 
-.advice-box {
-  background: var(--surface); border: 1px dashed var(--border); border-radius: 14px;
-  padding: 14px; font-size: 13px; line-height: 1.4; margin-bottom: 20px;
-  color: var(--text-muted); animation: slideDown 0.3s ease;
-}
+.advice-box { background: var(--surface); border: 1px dashed var(--border); border-radius: 14px; padding: 14px; font-size: 13px; line-height: 1.4; margin-bottom: 20px; color: var(--text-muted); animation: slideDown 0.3s ease; }
 .advice-box b { color: var(--text); }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* --- Water Tracker --- */
-.water-card {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 16px;
-}
-.water-icon {
-  width: 50px; height: 60px; background: rgba(59,130,246,0.1); border-radius: 10px;
-  position: relative; overflow: hidden; border: 2px solid rgba(59,130,246,0.3);
-  display: flex; align-items: flex-end; justify-content: center; flex-shrink: 0;
-}
-.water-fill {
-  width: 100%; background: var(--water); height: 0%; transition: height 0.5s ease;
-}
+.water-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; }
+.water-icon { width: 50px; height: 60px; background: rgba(59,130,246,0.1); border-radius: 10px; position: relative; overflow: hidden; border: 2px solid rgba(59,130,246,0.3); display: flex; align-items: flex-end; justify-content: center; flex-shrink: 0; }
+.water-fill { width: 100%; background: var(--water); height: 0%; transition: height 0.4s ease; }
 .water-info { flex: 1; }
-.water-title { font-size: 14px; font-weight: 700; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center;}
-.water-title span { font-size: 11px; color: var(--accent-1); cursor: pointer; text-decoration: underline;}
+.water-title { font-size: 14px; font-weight: 700; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; }
+.water-title span { font-size: 16px; color: var(--accent-1); cursor: pointer; padding: 4px; }
 .water-val { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
-.water-btns { display: flex; gap: 6px; }
-.water-btn {
-  background: rgba(59,130,246,0.15); color: var(--water); border: 1px solid rgba(59,130,246,0.3);
-  border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 700; cursor: pointer;
-  transition: all 0.2s;
-}
+.water-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.water-btn { background: rgba(59,130,246,0.15); color: var(--water); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
 .water-btn:active { background: var(--water); color: #fff; transform: scale(0.95); }
+.water-btn.minus { background: rgba(239,68,68,0.1); color: var(--danger); border-color: rgba(239,68,68,0.3); }
+.water-btn.minus:active { background: var(--danger); color: #fff; }
 
 /* --- Quick Routines --- */
 .routines-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px; scrollbar-width: none; }
 .routines-scroll::-webkit-scrollbar { display: none; }
 .routine-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 10px 16px; color: var(--text); font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 6px; }
 .routine-btn:active { background: var(--surface-hover); transform: scale(0.95); }
+.routine-btn.add-new { border-style: dashed; color: var(--accent-1); }
 
 /* --- Tasks --- */
 .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .section-head h2 { font-size: 18px; font-weight: 700; }
 .task-list { display: flex; flex-direction: column; gap: 12px; }
 
-.task-card {
-  position: relative; background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 16px; display: flex; align-items: flex-start; gap: 14px;
-  transition: opacity 0.3s; overflow: hidden;
-}
+.task-card { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; align-items: flex-start; gap: 14px; transition: opacity 0.3s, transform 0.1s; overflow: hidden; user-select: none; -webkit-user-select: none; }
 .task-card.done { opacity: 0.5; }
 .task-card.done .task-title { text-decoration: line-through; color: var(--text-muted); }
+.task-card:active { transform: scale(0.98); }
 
-.task-inner {
-  position: relative; z-index: 1; width: 100%; display: flex; align-items: flex-start; gap: 14px;
-  background: transparent; touch-action: pan-y; transition: transform 0.2s;
-}
+.task-inner { position: relative; z-index: 1; width: 100%; display: flex; align-items: flex-start; gap: 14px; background: transparent; }
 
 .diff-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 7px; flex-shrink: 0; }
 .diff-1 { background: var(--success); box-shadow: 0 0 8px var(--success); }
@@ -136,7 +112,8 @@ body {
 .task-check svg { width: 14px; height: 14px; stroke: #fff; stroke-width: 3; fill: none; opacity: 0; }
 .task-card.done .task-check svg { opacity: 1; }
 .task-content { flex: 1; }
-.task-title { font-size: 16px; font-weight: 500; line-height: 1.4; margin-bottom: 6px; }
+.task-title { font-size: 16px; font-weight: 500; line-height: 1.4; margin-bottom: 4px; }
+.task-details { font-size: 13px; color: var(--text-muted); line-height: 1.3; margin-bottom: 6px; }
 .task-time { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 8px; }
 .task-card.is-now { border-color: rgba(16, 185, 129, 0.4); }
 .task-card.is-now .task-time { color: var(--success); background: rgba(16, 185, 129, 0.15); }
@@ -148,11 +125,17 @@ body {
 .empty h3 { font-size: 16px; margin-bottom: 6px; }
 .empty p { font-size: 13px; color: var(--text-muted); }
 
+/* --- Daily Note --- */
+.note-section { margin-top: 24px; }
+.note-section textarea { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; color: var(--text); font-size: 14px; min-height: 80px; resize: none; font-family: inherit; outline: none; }
+.note-section textarea:focus { border-color: var(--accent-1); }
+.note-section textarea::placeholder { color: var(--text-muted); }
+
 /* --- Progress Screen --- */
 .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
 .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.stat-val { font-size: 28px; font-weight: 800; color: var(--accent-1); margin-bottom: 4px; }
-.stat-lbl { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+.stat-val { font-size: 24px; font-weight: 800; color: var(--accent-1); margin-bottom: 4px; }
+.stat-lbl { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; text-align: center;}
 
 .chart-wrapper { width: 100%; height: 150px; margin-bottom: 24px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 10px; position: relative; }
 .chart-svg { width: 100%; height: 100%; overflow: visible; }
@@ -160,11 +143,26 @@ body {
 .chart-area { fill: url(#areaGradient); opacity: 0.3; }
 .chart-dot { fill: var(--accent-2); stroke: var(--text); stroke-width: 2; }
 
-.badges-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.badge { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px 8px; text-align: center; opacity: 0.5; filter: grayscale(1); transition: all 0.3s; }
-.badge.unlocked { opacity: 1; filter: grayscale(0); border-color: var(--accent-1); box-shadow: 0 0 15px rgba(124, 58, 237, 0.2); }
-.badge-icon { font-size: 28px; margin-bottom: 8px; }
-.badge-name { font-size: 11px; font-weight: 700; line-height: 1.2; }
+/* Heatmap */
+.heatmap-wrapper { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-bottom: 24px; }
+.heat-cell { aspect-ratio: 1; background: var(--surface); border-radius: 4px; border: 1px solid var(--border); transition: all 0.3s; }
+.heat-cell.lvl-1 { background: rgba(124, 58, 237, 0.3); border-color: transparent; }
+.heat-cell.lvl-2 { background: rgba(124, 58, 237, 0.6); border-color: transparent; }
+.heat-cell.lvl-3 { background: var(--accent-1); border-color: transparent; box-shadow: 0 0 8px var(--accent-1); }
+.heat-cell.today { border: 1px solid var(--text); }
+
+/* Mood Tracker */
+.mood-tracker { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 24px; background: var(--surface); padding: 16px; border-radius: var(--radius); border: 1px solid var(--border); }
+.mood-day { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
+.mood-name { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+.mood-emoji { font-size: 24px; cursor: pointer; opacity: 0.3; transition: all 0.2s; }
+.mood-emoji.set { opacity: 1; transform: scale(1.1); }
+
+/* Archive */
+.archive-list { display: flex; flex-direction: column; gap: 8px; }
+.archive-item { background: var(--surface); border-radius: 12px; padding: 12px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
+.archive-date { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+.archive-text { flex: 1; margin-left: 12px; }
 
 /* --- Bottom Nav --- */
 .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-height); background: rgba(5, 5, 10, 0.85); backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; max-width: 520px; margin: 0 auto; padding-bottom: env(safe-area-inset-bottom); z-index: 90; }
@@ -207,12 +205,8 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
 <body>
 
 <svg width="0" height="0"><defs>
-  <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-    <stop offset="0%" stop-color="#7C3AED" /><stop offset="100%" stop-color="#3B82F6" />
-  </linearGradient>
-  <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-    <stop offset="0%" stop-color="#7C3AED" stop-opacity="0.8" /><stop offset="100%" stop-color="#7C3AED" stop-opacity="0" />
-  </linearGradient>
+  <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7C3AED" /><stop offset="100%" stop-color="#3B82F6" /></linearGradient>
+  <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#7C3AED" stop-opacity="0.8" /><stop offset="100%" stop-color="#7C3AED" stop-opacity="0" /></linearGradient>
 </defs></svg>
 
 <canvas id="confetti" class="confetti-canvas"></canvas>
@@ -225,7 +219,7 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
       <div class="date-label" id="dateLabel">Загрузка...</div>
     </div>
     <div class="header-actions">
-      <button class="icon-btn" id="themeBtn" onclick="switchTheme()">🎨</button>
+      <button class="icon-btn" onclick="switchTheme()">🎨</button>
       <div class="progress-ring">
         <svg><circle class="bg" cx="30" cy="30" r="25"></circle><circle class="fg" cx="30" cy="30" r="25" id="ringProgress"></circle></svg>
         <div class="progress-text" id="ringText">0%</div>
@@ -233,29 +227,16 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
     </div>
   </header>
 
-  <div class="quote-box" id="quoteBox">
-    Текст цитаты...
-    <span class="quote-author" id="quoteAuthor">— Автор</span>
-  </div>
-
+  <div class="quote-box" id="quoteBox">Текст цитаты...</div>
   <div class="date-scroll" id="dateScroll"></div>
 
-  <!-- РЕСУРС -->
   <div class="energy-row">
-    <button type="button" class="energy-btn" onclick="setEnergy('high')" id="btn-high">
-      <span class="emoji">🔥</span>Заряд
-    </button>
-    <button type="button" class="energy-btn" onclick="setEnergy('mid')" id="btn-mid">
-      <span class="emoji">😐</span>Норм
-    </button>
-    <button type="button" class="energy-btn" onclick="setEnergy('low')" id="btn-low">
-      <span class="emoji">🪫</span>Без сил
-    </button>
+    <button type="button" class="energy-btn" onclick="setEnergy('high')" id="btn-high"><span class="emoji">🔥</span>Заряд</button>
+    <button type="button" class="energy-btn" onclick="setEnergy('mid')" id="btn-mid"><span class="emoji">😐</span>Норм</button>
+    <button type="button" class="energy-btn" onclick="setEnergy('low')" id="btn-low"><span class="emoji">🪫</span>Без сил</button>
   </div>
-
   <div class="advice-box" id="adviceBox" style="display:none;"></div>
 
-  <!-- ТРЕКЕР ВОДЫ -->
   <div class="water-card">
     <div class="water-icon"><div class="water-fill" id="waterFill"></div></div>
     <div class="water-info">
@@ -265,24 +246,22 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
         <button class="water-btn" onclick="addWater(250)">+250</button>
         <button class="water-btn" onclick="addWater(500)">+500</button>
         <button class="water-btn" onclick="addWater(1000)">+1000</button>
+        <button class="water-btn minus" onclick="addWater(-250)">-250</button>
       </div>
     </div>
   </div>
 
-  <!-- БЫСТРЫЕ РУТИНЫ -->
-  <div class="routines-scroll">
-    <button type="button" class="routine-btn" onclick="addQuickTask('💧 Выпить воды', 1)">💧 Вода</button>
-    <button type="button" class="routine-btn" onclick="addQuickTask('📚 Чтение 20 мин', 1)">📚 Чтение</button>
-    <button type="button" class="routine-btn" onclick="addQuickTask('🏋️ Тренировка', 3)">🏋️ Спорт</button>
-    <button type="button" class="routine-btn" onclick="addQuickTask('🧘 Медитация', 1)">🧘 Медитация</button>
-  </div>
+  <div class="routines-scroll" id="routinesContainer"></div>
 
   <div class="section-head">
     <h2>Твой таймлайн</h2>
     <span style="font-size:13px; color:var(--text-muted); font-weight:600;" id="taskCount">0 / 0</span>
   </div>
-
   <div id="taskContainer"></div>
+
+  <div class="note-section">
+    <textarea id="dayNote" placeholder="Заметка на день..." oninput="saveNote(this.value)"></textarea>
+  </div>
 </div>
 
 <!-- ЭКРАН: ПРОГРЕСС -->
@@ -292,41 +271,33 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
   </header>
 
   <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-val" id="statStreak" style="color:var(--warning);">0</div>
-      <div class="stat-lbl">🔥 Дней подряд</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val" id="statTasks" style="color:var(--accent-1);">0</div>
-      <div class="stat-lbl">✅ Всего задач</div>
-    </div>
+    <div class="stat-card"><div class="stat-val" id="statAvg">0</div><div class="stat-lbl">Задач в среднем / день</div></div>
+    <div class="stat-card"><div class="stat-val" id="statTotal">0</div><div class="stat-lbl">Всего выполнено</div></div>
   </div>
 
-  <h2 style="font-size:16px; margin-bottom:12px;">Динамика роста</h2>
-  <div class="chart-wrapper">
-    <svg class="chart-svg" id="growthChart" viewBox="0 0 300 120" preserveAspectRatio="none"></svg>
-  </div>
+  <h2 style="font-size:16px; margin-bottom:12px;">Активность (30 дней)</h2>
+  <div class="heatmap-wrapper" id="heatmap"></div>
 
-  <h2 style="font-size:16px; margin-bottom:12px;">Достижения</h2>
-  <div class="badges-grid" id="badgesGrid"></div>
+  <h2 style="font-size:16px; margin-bottom:12px;">Настроение</h2>
+  <div class="mood-tracker" id="moodTracker"></div>
+
+  <h2 style="font-size:16px; margin-bottom:12px;">Архив побед</h2>
+  <div class="archive-list" id="archiveList"></div>
 </div>
 
 <button class="fab" id="fabAdd" onclick="openAddModal()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
 
 <nav class="bottom-nav">
-  <button class="nav-btn active" data-target="plan" onclick="switchTab('plan')">
-    <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>План
-  </button>
-  <button class="nav-btn" data-target="progress" onclick="switchTab('progress')">
-    <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>Прогресс
-  </button>
+  <button class="nav-btn active" onclick="switchTab('plan')"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>План</button>
+  <button class="nav-btn" onclick="switchTab('progress')"><svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>Прогресс</button>
 </nav>
 
-<!-- МОДАЛКА ДОБАВЛЕНИЯ -->
+<!-- МОДАЛКА ДОБАВЛЕНИЯ/РЕДАКТИРОВАНИЯ ЗАДАЧИ -->
 <div class="modal-overlay" id="modalAdd">
   <div class="modal-content">
-    <h3>Что в планах?</h3>
+    <h3 id="modalTitle">Что в планах?</h3>
     <div class="input-group"><label>Задача</label><input type="text" id="taskInput" placeholder="Название..." autocomplete="off" /></div>
+    <div class="input-group"><label>Детали (необязательно)</label><input type="text" id="taskDetailsInput" placeholder="Что конкретно сделать..." autocomplete="off" /></div>
     
     <div class="input-group">
       <label>Сложность</label>
@@ -340,7 +311,7 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
     <div class="input-group"><label>Время (необязательно)</label><div class="time-inputs"><input type="time" id="timeStart" /><input type="time" id="timeEnd" /></div></div>
     <div class="modal-btns">
       <button class="btn btn-cancel" onclick="closeModal('modalAdd')">Отмена</button>
-      <button class="btn btn-save" onclick="saveNewTask()">В план</button>
+      <button class="btn btn-save" id="btnSaveTask" onclick="saveTask()">Добавить</button>
     </div>
   </div>
 </div>
@@ -349,14 +320,34 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
 <div class="modal-overlay" id="modalWater">
   <div class="modal-content">
     <h3>Твоя норма воды</h3>
-    <div class="input-group">
-      <label>Сколько миллилитров в день?</label>
-      <input type="number" id="waterTargetInput" placeholder="2000" step="100" />
-    </div>
+    <div class="input-group"><label>Сколько миллилитров в день?</label><input type="number" id="waterTargetInput" placeholder="2000" step="100" /></div>
     <div class="modal-btns">
       <button class="btn btn-cancel" onclick="closeModal('modalWater')">Отмена</button>
       <button class="btn btn-save" onclick="saveWaterTarget()">Сохранить</button>
     </div>
+  </div>
+</div>
+
+<!-- МОДАЛКА СВОЕЙ РУТИНЫ -->
+<div class="modal-overlay" id="modalRoutine">
+  <div class="modal-content">
+    <h3>Своя рутина</h3>
+    <div class="input-group"><label>Название (с эмодзи)</label><input type="text" id="routineInput" placeholder="🧹 Уборка" autocomplete="off" /></div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeModal('modalRoutine')">Отмена</button>
+      <button class="btn btn-save" onclick="saveRoutine()">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<!-- МОДАЛКА НАСТРОЕНИЯ -->
+<div class="modal-overlay" id="modalMood">
+  <div class="modal-content">
+    <h3>Настроение на сегодня</h3>
+    <div style="display:flex; justify-content:space-between; font-size: 40px; margin-bottom: 24px;" id="moodOptions">
+      <span onclick="setMood('🤩')">🤩</span><span onclick="setMood('🙂')">🙂</span><span onclick="setMood('😐')">😐</span><span onclick="setMood('😔')">😔</span><span onclick="setMood('😫')">😫</span>
+    </div>
+    <button class="btn btn-cancel" style="width:100%;" onclick="closeModal('modalMood')">Закрыть</button>
   </div>
 </div>
 
@@ -365,7 +356,8 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
 let state = {};
 let activeDate = '';
 let selectedDiff = 1;
-const STORAGE_KEY = 'aura_mega_v7';
+let editingTaskId = null;
+const STORAGE_KEY = 'aura_mega_v9';
 
 const pad = n => String(n).padStart(2, '0');
 const dateKey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -376,8 +368,7 @@ const QUOTES = [
   { text: "Успех — это способность идти от неудачи к неудаче, не теряя энтузиазма.", author: "Уинстон Черчилль" },
   { text: "Ваше время ограничено, не тратьте его на чужую жизнь.", author: "Стив Джобс" },
   { text: "Лучший способ предсказать будущее — создать его.", author: "Питер Друкер" },
-  { text: "Сложнее всего начать действовать, все остальное зависит только от упорства.", author: "Амелия Эрхарт" },
-  { text: "Дисциплина — это выбор между тем, что хочешь сейчас, и тем, что хочешь больше всего.", author: "Абрахам Линкольн" }
+  { text: "Сложнее всего начать действовать, все остальное зависит только от упорства.", author: "Амелия Эрхарт" }
 ];
 
 const ADVICES = {
@@ -386,22 +377,29 @@ const ADVICES = {
   low: "🪫 <b>На нуле...</b> Не геройствуй. Сложные задачи лучше перенести или сделать что-то совсем простое: уборка, вода, прогулка."
 };
 
+const DEFAULT_ROUTINES = [
+  { text: '💧 Вода', diff: 1 },
+  { text: '📚 Чтение', diff: 1 },
+  { text: '🏋️ Спорт', diff: 3 },
+  { text: '🧘 Медитация', diff: 1 }
+];
+
 // === ИНИЦИАЛИЗАЦИЯ ===
 window.onload = function() {
   const tg = window.Telegram?.WebApp;
   tg?.ready(); tg?.expand(); tg?.setHeaderColor?.('#05050A');
 
   try {
-    state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
-      days: {}, streak: 0, bestStreak: 0, lastStreakDate: null, theme: 'default', waterTarget: 2000
-    };
-  } catch(e) {
-    state = { days: {}, streak: 0, bestStreak: 0, lastStreakDate: null, theme: 'default', waterTarget: 2000 };
-  }
+    state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  } catch(e) { state = {}; }
+  
+  if (!state.days) state.days = {};
+  if (!state.theme) state.theme = 'default';
+  if (!state.waterTarget) state.waterTarget = 2000;
+  if (!state.routines) state.routines = [...DEFAULT_ROUTINES];
   
   activeDate = todayKey();
-  
-  if (state.theme && state.theme !== 'default') document.documentElement.setAttribute('data-theme', state.theme);
+  if (state.theme !== 'default') document.documentElement.setAttribute('data-theme', state.theme);
 
   updateClock();
   setInterval(updateClock, 1000);
@@ -411,8 +409,10 @@ window.onload = function() {
 
 function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 function getDay(k) { 
-  if (!state.days[k]) state.days[k] = { tasks: [], energy: '', water: 0 }; 
+  if (!state.days[k]) state.days[k] = { tasks: [], energy: '', water: 0, note: '', mood: '' }; 
   if (state.days[k].water === undefined) state.days[k].water = 0;
+  if (state.days[k].note === undefined) state.days[k].note = '';
+  if (state.days[k].mood === undefined) state.days[k].mood = '';
   return state.days[k]; 
 }
 
@@ -428,16 +428,15 @@ function renderAll() {
   renderDates();
   renderEnergy();
   renderWater();
+  renderRoutines();
   renderTasks();
-  renderStats();
+  renderNote();
+  renderStats(); // Для вкладки прогресс
 }
 
 function renderQuote() {
   const qIdx = Math.floor(new Date().setHours(0,0,0,0) / 86400000) % QUOTES.length;
-  document.getElementById('quoteBox').innerHTML = `
-    "${QUOTES[qIdx].text}"
-    <span class="quote-author">— ${QUOTES[qIdx].author}</span>
-  `;
+  document.getElementById('quoteBox').innerHTML = `"${QUOTES[qIdx].text}"<span class="quote-author">— ${QUOTES[qIdx].author}</span>`;
 }
 
 function renderDates() {
@@ -456,60 +455,9 @@ function renderDates() {
   }
 }
 
-// === ВОДА ===
-function renderWater() {
-  const day = getDay(activeDate);
-  const target = state.waterTarget || 2000;
-  document.getElementById('waterVal').textContent = `${day.water} / ${target} мл`;
-  
-  let pct = (day.water / target) * 100;
-  if (pct > 100) pct = 100;
-  document.getElementById('waterFill').style.height = pct + '%';
-  
-  if (pct >= 100) {
-    document.getElementById('waterFill').style.background = 'var(--success)';
-  } else {
-    document.getElementById('waterFill').style.background = 'var(--water)';
-  }
-}
-
-function addWater(ml) {
-  const day = getDay(activeDate);
-  const prev = day.water;
-  day.water += ml;
-  save();
-  renderWater();
-  
-  if (prev < (state.waterTarget || 2000) && day.water >= (state.waterTarget || 2000)) {
-    fireConfetti();
-    if(window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-    setTimeout(() => alert('💧 Отлично! Норма воды на сегодня выполнена!'), 300);
-  } else {
-    if(window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-  }
-}
-
-function openWaterModal() {
-  document.getElementById('waterTargetInput').value = state.waterTarget || 2000;
-  document.getElementById('modalWater').classList.add('open');
-}
-
-function saveWaterTarget() {
-  const val = parseInt(document.getElementById('waterTargetInput').value);
-  if (val > 0) {
-    state.waterTarget = val;
-    save();
-    renderWater();
-    closeModal('modalWater');
-  }
-}
-
-// === РЕСУРС И ЗАДАЧИ ===
 function setEnergy(level) {
-  const day = getDay(activeDate);
-  day.energy = level;
-  save();
-  renderEnergy();
+  getDay(activeDate).energy = level;
+  save(); renderEnergy();
   if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
 }
 
@@ -530,11 +478,79 @@ function renderEnergy() {
   }
 }
 
+// === ВОДА ===
+function renderWater() {
+  const day = getDay(activeDate);
+  const target = state.waterTarget || 2000;
+  document.getElementById('waterVal').textContent = `${day.water} / ${target} мл`;
+  
+  let pct = (day.water / target) * 100;
+  if (pct > 100) pct = 100;
+  if (pct < 0) pct = 0;
+  document.getElementById('waterFill').style.height = pct + '%';
+  document.getElementById('waterFill').style.background = (pct >= 100) ? 'var(--success)' : 'var(--water)';
+}
+
+function addWater(ml) {
+  const day = getDay(activeDate);
+  const prev = day.water;
+  day.water = Math.max(0, day.water + ml);
+  save(); renderWater();
+  
+  if (prev < (state.waterTarget || 2000) && day.water >= (state.waterTarget || 2000)) {
+    fireConfetti();
+    if(window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    setTimeout(() => alert('💧 Отлично! Норма воды на сегодня выполнена!'), 300);
+  } else {
+    if(window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+  }
+}
+
+function openWaterModal() {
+  document.getElementById('waterTargetInput').value = state.waterTarget || 2000;
+  document.getElementById('modalWater').classList.add('open');
+}
+
+function saveWaterTarget() {
+  const val = parseInt(document.getElementById('waterTargetInput').value);
+  if (val > 0) { state.waterTarget = val; save(); renderWater(); closeModal('modalWater'); }
+}
+
+// === РУТИНЫ ===
+function renderRoutines() {
+  const cont = document.getElementById('routinesContainer'); cont.innerHTML = '';
+  state.routines.forEach(r => {
+    const btn = document.createElement('button');
+    btn.className = 'routine-btn';
+    btn.textContent = r.text;
+    btn.onclick = () => { addQuickTask(r.text, r.diff); };
+    // Долгое нажатие для удаления рутины
+    let timer;
+    btn.onmousedown = btn.ontouchstart = () => { timer = setTimeout(() => { if(confirm('Удалить эту рутину?')) { state.routines = state.routines.filter(x => x.text !== r.text); save(); renderRoutines(); } }, 800); };
+    btn.onmouseup = btn.ontouchend = btn.onmouseleave = () => { clearTimeout(timer); };
+    cont.appendChild(btn);
+  });
+  const addBtn = document.createElement('button');
+  addBtn.className = 'routine-btn add-new';
+  addBtn.textContent = '+ Своя';
+  addBtn.onclick = () => { document.getElementById('routineInput').value = ''; document.getElementById('modalRoutine').classList.add('open'); };
+  cont.appendChild(addBtn);
+}
+
+function saveRoutine() {
+  const text = document.getElementById('routineInput').value.trim();
+  if (text) {
+    state.routines.push({ text, diff: 1 });
+    save(); renderRoutines(); closeModal('modalRoutine');
+  }
+}
+
 function addQuickTask(text, diff) {
-  getDay(activeDate).tasks.push({ id: Date.now().toString(), text, diff, timeStart: null, timeEnd: null, done: false });
+  getDay(activeDate).tasks.push({ id: Date.now().toString(), text, details: '', diff, timeStart: null, timeEnd: null, done: false });
   save(); renderTasks();
 }
 
+// === ЗАДАЧИ ===
 function renderTasks() {
   const day = getDay(activeDate);
   const container = document.getElementById('taskContainer');
@@ -573,114 +589,186 @@ function renderTasks() {
     }
     card.className += statusClass;
 
+    const detailsHtml = t.details ? `<div class="task-details">📝 ${t.details}</div>` : '';
+
     card.innerHTML = `
       <div class="task-inner">
         <div class="diff-dot diff-${diff}"></div>
-        <div class="task-check" onclick="toggleTask('${t.id}')"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
-        <div class="task-content">
+        <div class="task-check" onclick="toggleTask(event, '${t.id}')"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+        <div class="task-content" onclick="openEditModal('${t.id}')">
           <div class="task-title">${t.text}</div>
+          ${detailsHtml}
           ${timeHtml}
         </div>
-        <button class="task-del" onclick="deleteTask('${t.id}')">×</button>
+        <button class="task-del" onclick="deleteTask(event, '${t.id}')">×</button>
       </div>
     `;
     list.appendChild(card);
   });
-
   container.appendChild(list);
 }
 
-function toggleTask(id) {
+function toggleTask(e, id) {
+  e.stopPropagation();
   const day = getDay(activeDate);
   const t = day.tasks.find(x => x.id === id);
   if (!t) return;
   t.done = !t.done;
-  if (t.done) {
-    if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-    if (day.tasks.every(x => x.done)) fireConfetti();
-  }
-  save(); renderTasks();
+  if (t.done && window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+  save(); renderTasks(); renderStats();
 }
 
-function deleteTask(id) {
+function deleteTask(e, id) {
+  e.stopPropagation();
   const day = getDay(activeDate);
   day.tasks = day.tasks.filter(x => x.id !== id);
-  save(); renderTasks();
+  save(); renderTasks(); renderStats();
+}
+
+function openAddModal() {
+  editingTaskId = null;
+  document.getElementById('modalTitle').textContent = 'Что в планах?';
+  document.getElementById('btnSaveTask').textContent = 'Добавить';
+  document.getElementById('taskInput').value = '';
+  document.getElementById('taskDetailsInput').value = '';
+  document.getElementById('timeStart').value = '';
+  document.getElementById('timeEnd').value = '';
+  selectDiff(1);
+  document.getElementById('modalAdd').classList.add('open');
+}
+
+function openEditModal(id) {
+  const day = getDay(activeDate);
+  const t = day.tasks.find(x => x.id === id);
+  if (!t) return;
+  editingTaskId = id;
+  document.getElementById('modalTitle').textContent = 'Редактировать';
+  document.getElementById('btnSaveTask').textContent = 'Сохранить';
+  document.getElementById('taskInput').value = t.text;
+  document.getElementById('taskDetailsInput').value = t.details || '';
+  document.getElementById('timeStart').value = t.timeStart || '';
+  document.getElementById('timeEnd').value = t.timeEnd || '';
+  selectDiff(t.diff || 1);
+  document.getElementById('modalAdd').classList.add('open');
+}
+
+function selectDiff(val) {
+  selectedDiff = val;
+  document.querySelectorAll('.diff-opt').forEach(o => o.classList.remove('active'));
+  document.querySelector(`.diff-opt[data-val="${val}"]`).classList.add('active');
+}
+
+function saveTask() {
+  const text = document.getElementById('taskInput').value.trim(); if (!text) return;
+  const details = document.getElementById('taskDetailsInput').value.trim();
+  const tStart = document.getElementById('timeStart').value || null;
+  const tEnd = document.getElementById('timeEnd').value || null;
+  
+  const day = getDay(activeDate);
+  
+  if (editingTaskId) {
+    const t = day.tasks.find(x => x.id === editingTaskId);
+    if (t) { t.text = text; t.details = details; t.diff = selectedDiff; t.timeStart = tStart; t.timeEnd = tEnd; }
+  } else {
+    day.tasks.push({ id: Date.now().toString(), text, details, diff: selectedDiff, timeStart: tStart, timeEnd: tEnd, done: false });
+  }
+  
+  save(); renderTasks(); closeModal('modalAdd');
+}
+
+// === ЗАМЕТКА ===
+function renderNote() {
+  const note = document.getElementById('dayNote');
+  const day = getDay(activeDate);
+  if (document.activeElement !== note) note.value = day.note || '';
+}
+
+function saveNote(val) {
+  getDay(activeDate).note = val;
+  save();
 }
 
 // === ПРОГРЕСС ===
 function renderStats() {
-  // Стрик
-  document.getElementById('statStreak').textContent = state.streak || 0;
-  
-  // Всего задач
-  let total = 0;
-  Object.values(state.days).forEach(d => total += d.tasks.filter(t => t.done).length);
-  document.getElementById('statTasks').textContent = total;
+  let totalDone = 0;
+  let activeDaysCount = 0;
 
-  // График
-  const svg = document.getElementById('growthChart');
+  Object.values(state.days).forEach(d => {
+    const done = d.tasks.filter(t => t.done).length;
+    totalDone += done;
+    if (done > 0) activeDaysCount++;
+  });
+
+  document.getElementById('statTotal').textContent = totalDone;
+  document.getElementById('statAvg').textContent = activeDaysCount ? (totalDone / activeDaysCount).toFixed(1) : 0;
+
+  // Heatmap (30 дней)
+  const heatmap = document.getElementById('heatmap'); heatmap.innerHTML = '';
   const today = new Date();
-  const points = [];
-  let maxVal = 1;
+  
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    const key = dateKey(d);
+    const dayData = state.days[key];
+    const done = dayData ? dayData.tasks.filter(t => t.done).length : 0;
+    
+    let lvl = 0;
+    if (done > 0) lvl = 1;
+    if (done >= 3) lvl = 2;
+    if (done >= 5) lvl = 3;
 
+    const cell = document.createElement('div');
+    cell.className = `heat-cell lvl-${lvl}` + (i === 0 ? ' today' : '');
+    cell.title = `${d.getDate()}.${d.getMonth()+1}: ${done} задач`;
+    heatmap.appendChild(cell);
+  }
+
+  // Настроение (последние 7 дней)
+  const moodTracker = document.getElementById('moodTracker'); moodTracker.innerHTML = '';
+  const daysShort = ['ВС','ПН','ВТ','СР','ЧТ','ПТ','СБ'];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(today); d.setDate(today.getDate() - i);
     const key = dateKey(d);
-    const done = state.days[key] ? state.days[key].tasks.filter(t=>t.done).length : 0;
-    if (done > maxVal) maxVal = done;
-    points.push(done);
+    const mood = state.days[key] ? state.days[key].mood : '';
+    
+    const el = document.createElement('div');
+    el.className = 'mood-day';
+    el.innerHTML = `
+      <div class="mood-name">${daysShort[d.getDay()]}</div>
+      <div class="mood-emoji ${mood ? 'set' : ''}" onclick="openMoodModal('${key}')">${mood || '○'}</div>
+    `;
+    moodTracker.appendChild(el);
   }
 
-  const width = 300, height = 120;
-  const stepX = width / 6;
-  
-  let pathLine = '';
-  let pathArea = '';
-
-  points.forEach((val, i) => {
-    const x = i * stepX;
-    const y = height - (val / maxVal) * (height - 20) - 10;
-    if (i === 0) {
-      pathLine = `M ${x} ${y}`;
-      pathArea = `M ${x} ${y}`;
-    } else {
-      pathLine += ` L ${x} ${y}`;
-      pathArea += ` L ${x} ${y}`;
-    }
+  // Архив
+  const archive = document.getElementById('archiveList'); archive.innerHTML = '';
+  let allDone = [];
+  Object.entries(state.days).forEach(([date, data]) => {
+    data.tasks.forEach(t => { if (t.done) allDone.push({ date, text: t.text }); });
   });
+  allDone.sort((a,b) => b.date.localeCompare(a.date));
   
-  pathArea += ` L ${width} ${height} L 0 ${height} Z`;
-
-  svg.innerHTML = `
-    <path class="chart-area" d="${pathArea}" />
-    <path class="chart-line" d="${pathLine}" />
-    ${points.map((val, i) => {
-      const x = i * stepX;
-      const y = height - (val / maxVal) * (height - 20) - 10;
-      return `<circle class="chart-dot" cx="${x}" cy="${y}" r="4" />`;
-    }).join('')}
-  `;
-
-  // Ачивки
-  const BADGES = [
-    { id: 'streak3', icon: '🔥', name: '3 дня подряд', unlocked: state.streak >= 3 },
-    { id: 'streak7', icon: '🏆', name: 'Неделя силы', unlocked: state.streak >= 7 },
-    { id: 'task10', icon: '✅', name: '10 задач', unlocked: total >= 10 },
-    { id: 'task50', icon: '💎', name: '50 задач', unlocked: total >= 50 },
-    { id: 'water', icon: '💧', name: 'Водный баланс', unlocked: Object.values(state.days).some(d => d.water >= (state.waterTarget || 2000)) },
-    { id: 'early', icon: '🌅', name: 'Ранняя пташка', unlocked: Object.values(state.days).some(d => d.tasks.some(t => t.done && t.timeStart && t.timeStart < '08:00')) }
-  ];
-
-  const grid = document.getElementById('badgesGrid'); grid.innerHTML = '';
-  BADGES.forEach(b => {
-    grid.innerHTML += `<div class="badge ${b.unlocked ? 'unlocked' : ''}"><div class="badge-icon">${b.icon}</div><div class="badge-name">${b.name}</div></div>`;
+  if (!allDone.length) archive.innerHTML = '<div style="color:var(--text-muted); font-size:14px;">Пока нет выполненных задач</div>';
+  allDone.slice(0, 10).forEach(item => {
+    const d = item.date.split('-').reverse().slice(0,2).join('.');
+    archive.innerHTML += `<div class="archive-item"><span class="archive-date">${d}</span><span class="archive-text">${item.text}</span><span style="color:var(--success);">✓</span></div>`;
   });
 }
 
-// === UI ===
+let currentMoodDate = '';
+function openMoodModal(date) {
+  currentMoodDate = date;
+  document.getElementById('modalMood').classList.add('open');
+}
+function setMood(emoji) {
+  if (!state.days[currentMoodDate]) state.days[currentMoodDate] = { tasks: [], energy: '', water: 0, note: '', mood: '' };
+  state.days[currentMoodDate].mood = emoji;
+  save(); renderStats(); closeModal('modalMood');
+}
+
+// === UI УТИЛИТЫ ===
 function switchTheme() {
-  const themes = ['default', 'emerald', 'sunset'];
+  const themes = ['default', 'emerald', 'sunset', 'pink'];
   let idx = themes.indexOf(state.theme || 'default');
   state.theme = themes[(idx + 1) % themes.length];
   document.documentElement.setAttribute('data-theme', state.theme === 'default' ? '' : state.theme);
@@ -689,7 +777,7 @@ function switchTheme() {
 
 function switchTab(tab) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector(`.nav-btn[data-target="${tab}"]`).classList.add('active');
+  document.querySelector(`.nav-btn[onclick*="${tab}"]`).classList.add('active');
   
   if (tab === 'progress') {
     document.getElementById('screen-plan').classList.add('hidden');
@@ -703,38 +791,14 @@ function switchTab(tab) {
   }
 }
 
-function openAddModal() {
-  document.getElementById('taskInput').value = '';
-  document.getElementById('timeStart').value = '';
-  document.getElementById('timeEnd').value = '';
-  selectDiff(1);
-  document.getElementById('modalAdd').classList.add('open');
-}
-
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-function selectDiff(val) {
-  selectedDiff = val;
-  document.querySelectorAll('.diff-opt').forEach(o => o.classList.remove('active'));
-  document.querySelector(`.diff-opt[data-val="${val}"]`).classList.add('active');
-}
-
-function saveNewTask() {
-  const text = document.getElementById('taskInput').value.trim(); if (!text) return;
-  getDay(activeDate).tasks.push({
-    id: Date.now().toString(), text, diff: selectedDiff,
-    timeStart: document.getElementById('timeStart').value || null,
-    timeEnd: document.getElementById('timeEnd').value || null, done: false
-  });
-  save(); renderTasks(); closeModal('modalAdd');
-}
 
 // === КОНФЕТТИ ===
 const canvas = document.getElementById('confetti'); const ctx = canvas.getContext('2d'); let particles = [];
 function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 window.addEventListener('resize', resizeCanvas); resizeCanvas();
 function fireConfetti() {
-  const colors = ['#7C3AED', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+  const colors = ['#7C3AED', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#FF007F'];
   for (let i = 0; i < 50; i++) {
     particles.push({ x: window.innerWidth / 2, y: window.innerHeight / 2, vx: (Math.random() - 0.5) * 15, vy: (Math.random() - 0.5) * 15 - 5, color: colors[Math.floor(Math.random() * colors.length)], size: Math.random() * 6 + 4, life: 1 });
   }
@@ -751,7 +815,6 @@ function updateConfetti() {
   if (particles.length > 0) requestAnimationFrame(updateConfetti);
   else ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
-
 </script>
 </body>
 </html>
