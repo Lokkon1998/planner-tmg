@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1" />
 <meta name="theme-color" content="#05050A" />
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-<title>Aura 9.0</title>
+<title>Aura 10.0</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 :root {
@@ -14,9 +14,10 @@
   --accent-1: #7C3AED; --accent-2: #3B82F6; --success: #10B981; --danger: #EF4444;
   --warning: #F59E0B; --radius: 20px; --nav-height: 76px; --water: #3B82F6;
 }
+/* ТЕМЫ */
 [data-theme="emerald"] { --bg: #04120E; --accent-1: #10B981; --accent-2: #3B82F6; }
 [data-theme="sunset"] { --bg: #120804; --accent-1: #F97316; --accent-2: #E11D48; }
-[data-theme="pink"] { --bg: #0F0412; --accent-1: #FF007F; --accent-2: #FF8C00; --water: #FF007F; }
+[data-theme="pink"] { --bg: #120416; --accent-1: #FF007F; --accent-2: #C026D3; --water: #FF007F; }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
@@ -111,9 +112,19 @@ body {
 .task-card.done .task-check { background: var(--success); border-color: var(--success); }
 .task-check svg { width: 14px; height: 14px; stroke: #fff; stroke-width: 3; fill: none; opacity: 0; }
 .task-card.done .task-check svg { opacity: 1; }
-.task-content { flex: 1; }
+.task-content { flex: 1; cursor: pointer; }
 .task-title { font-size: 16px; font-weight: 500; line-height: 1.4; margin-bottom: 4px; }
-.task-details { font-size: 13px; color: var(--text-muted); line-height: 1.3; margin-bottom: 6px; }
+.task-desc { font-size: 13px; color: var(--text-muted); line-height: 1.3; margin-bottom: 8px; }
+
+/* Подзадачи */
+.subtasks-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.subtask-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
+.subtask-item.done span { text-decoration: line-through; opacity: 0.6; }
+.subtask-check { width: 16px; height: 16px; border: 1.5px solid var(--text-muted); border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: all 0.2s; }
+.subtask-item.done .subtask-check { background: var(--accent-1); border-color: var(--accent-1); }
+.subtask-check svg { width: 10px; height: 10px; stroke: #fff; stroke-width: 3; fill: none; opacity: 0; }
+.subtask-item.done .subtask-check svg { opacity: 1; }
+
 .task-time { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 8px; }
 .task-card.is-now { border-color: rgba(16, 185, 129, 0.4); }
 .task-card.is-now .task-time { color: var(--success); background: rgba(16, 185, 129, 0.15); }
@@ -137,13 +148,6 @@ body {
 .stat-val { font-size: 24px; font-weight: 800; color: var(--accent-1); margin-bottom: 4px; }
 .stat-lbl { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; text-align: center;}
 
-.chart-wrapper { width: 100%; height: 150px; margin-bottom: 24px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 10px; position: relative; }
-.chart-svg { width: 100%; height: 100%; overflow: visible; }
-.chart-line { fill: none; stroke: url(#gradient); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 4px 6px rgba(124,58,237,0.5)); }
-.chart-area { fill: url(#areaGradient); opacity: 0.3; }
-.chart-dot { fill: var(--accent-2); stroke: var(--text); stroke-width: 2; }
-
-/* Heatmap */
 .heatmap-wrapper { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-bottom: 24px; }
 .heat-cell { aspect-ratio: 1; background: var(--surface); border-radius: 4px; border: 1px solid var(--border); transition: all 0.3s; }
 .heat-cell.lvl-1 { background: rgba(124, 58, 237, 0.3); border-color: transparent; }
@@ -151,14 +155,12 @@ body {
 .heat-cell.lvl-3 { background: var(--accent-1); border-color: transparent; box-shadow: 0 0 8px var(--accent-1); }
 .heat-cell.today { border: 1px solid var(--text); }
 
-/* Mood Tracker */
 .mood-tracker { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 24px; background: var(--surface); padding: 16px; border-radius: var(--radius); border: 1px solid var(--border); }
 .mood-day { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
 .mood-name { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
 .mood-emoji { font-size: 24px; cursor: pointer; opacity: 0.3; transition: all 0.2s; }
 .mood-emoji.set { opacity: 1; transform: scale(1.1); }
 
-/* Archive */
 .archive-list { display: flex; flex-direction: column; gap: 8px; }
 .archive-item { background: var(--surface); border-radius: 12px; padding: 12px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
 .archive-date { font-size: 11px; color: var(--text-muted); font-weight: 600; }
@@ -178,7 +180,7 @@ body {
 /* --- Modals --- */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(6px); display: none; align-items: flex-end; z-index: 200; }
 .modal-overlay.open { display: flex; }
-.modal-content { background: #0F111A; width: 100%; border-radius: 28px 28px 0 0; padding: 24px 20px calc(24px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+.modal-content { background: #0F111A; width: 100%; border-radius: 28px 28px 0 0; padding: 24px 20px calc(24px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); max-height: 90vh; overflow-y: auto; }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 .input-group { margin-bottom: 16px; }
 .input-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; }
@@ -190,6 +192,14 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
 .btn { flex: 1; padding: 16px; border-radius: 14px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; }
 .btn-cancel { background: var(--surface); color: var(--text); }
 .btn-save { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: #fff; }
+
+/* Подзадачи в модалке */
+.modal-subtasks { margin-bottom: 16px; }
+.modal-subtask-item { display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 10px 14px; border-radius: 10px; margin-bottom: 6px; font-size: 14px; }
+.modal-subtask-item button { background: none; border: none; color: var(--danger); font-size: 18px; cursor: pointer; }
+.subtask-add-row { display: flex; gap: 8px; }
+.subtask-add-row input { flex: 1; padding: 12px 14px; border-radius: 12px; }
+.subtask-add-row button { background: var(--surface); color: var(--text); border: 1px solid var(--border); width: 44px; border-radius: 12px; font-size: 20px; font-weight: bold; cursor: pointer; }
 
 /* Стили для выбора сложности */
 .diff-selector { display: flex; gap: 8px; }
@@ -206,7 +216,6 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
 
 <svg width="0" height="0"><defs>
   <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7C3AED" /><stop offset="100%" stop-color="#3B82F6" /></linearGradient>
-  <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#7C3AED" stop-opacity="0.8" /><stop offset="100%" stop-color="#7C3AED" stop-opacity="0" /></linearGradient>
 </defs></svg>
 
 <canvas id="confetti" class="confetti-canvas"></canvas>
@@ -296,8 +305,19 @@ input:focus, textarea:focus { border-color: var(--accent-1); }
 <div class="modal-overlay" id="modalAdd">
   <div class="modal-content">
     <h3 id="modalTitle">Что в планах?</h3>
+    
     <div class="input-group"><label>Задача</label><input type="text" id="taskInput" placeholder="Название..." autocomplete="off" /></div>
-    <div class="input-group"><label>Детали (необязательно)</label><input type="text" id="taskDetailsInput" placeholder="Что конкретно сделать..." autocomplete="off" /></div>
+    
+    <div class="input-group"><label>Описание (необязательно)</label><input type="text" id="taskDescInput" placeholder="Кратко о задаче..." autocomplete="off" /></div>
+    
+    <div class="input-group">
+      <label>Подзадачи</label>
+      <div id="modalSubtasksList" class="modal-subtasks"></div>
+      <div class="subtask-add-row">
+        <input type="text" id="subtaskInput" placeholder="Новый пункт..." onkeydown="if(event.key==='Enter') addSubtaskFromModal()" />
+        <button type="button" onclick="addSubtaskFromModal()">+</button>
+      </div>
+    </div>
     
     <div class="input-group">
       <label>Сложность</label>
@@ -357,7 +377,8 @@ let state = {};
 let activeDate = '';
 let selectedDiff = 1;
 let editingTaskId = null;
-const STORAGE_KEY = 'aura_mega_v9';
+let tempSubtasks = []; // Для модалки
+const STORAGE_KEY = 'aura_mega_v10';
 
 const pad = n => String(n).padStart(2, '0');
 const dateKey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -389,9 +410,7 @@ window.onload = function() {
   const tg = window.Telegram?.WebApp;
   tg?.ready(); tg?.expand(); tg?.setHeaderColor?.('#05050A');
 
-  try {
-    state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-  } catch(e) { state = {}; }
+  try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch(e) { state = {}; }
   
   if (!state.days) state.days = {};
   if (!state.theme) state.theme = 'default';
@@ -424,14 +443,8 @@ function updateClock() {
 }
 
 function renderAll() {
-  renderQuote();
-  renderDates();
-  renderEnergy();
-  renderWater();
-  renderRoutines();
-  renderTasks();
-  renderNote();
-  renderStats(); // Для вкладки прогресс
+  renderQuote(); renderDates(); renderEnergy(); renderWater();
+  renderRoutines(); renderTasks(); renderNote(); renderStats();
 }
 
 function renderQuote() {
@@ -485,8 +498,7 @@ function renderWater() {
   document.getElementById('waterVal').textContent = `${day.water} / ${target} мл`;
   
   let pct = (day.water / target) * 100;
-  if (pct > 100) pct = 100;
-  if (pct < 0) pct = 0;
+  if (pct > 100) pct = 100; if (pct < 0) pct = 0;
   document.getElementById('waterFill').style.height = pct + '%';
   document.getElementById('waterFill').style.background = (pct >= 100) ? 'var(--success)' : 'var(--water)';
 }
@@ -524,7 +536,6 @@ function renderRoutines() {
     btn.className = 'routine-btn';
     btn.textContent = r.text;
     btn.onclick = () => { addQuickTask(r.text, r.diff); };
-    // Долгое нажатие для удаления рутины
     let timer;
     btn.onmousedown = btn.ontouchstart = () => { timer = setTimeout(() => { if(confirm('Удалить эту рутину?')) { state.routines = state.routines.filter(x => x.text !== r.text); save(); renderRoutines(); } }, 800); };
     btn.onmouseup = btn.ontouchend = btn.onmouseleave = () => { clearTimeout(timer); };
@@ -546,7 +557,7 @@ function saveRoutine() {
 }
 
 function addQuickTask(text, diff) {
-  getDay(activeDate).tasks.push({ id: Date.now().toString(), text, details: '', diff, timeStart: null, timeEnd: null, done: false });
+  getDay(activeDate).tasks.push({ id: Date.now().toString(), text, description: '', subtasks: [], diff, timeStart: null, timeEnd: null, done: false });
   save(); renderTasks();
 }
 
@@ -589,7 +600,17 @@ function renderTasks() {
     }
     card.className += statusClass;
 
-    const detailsHtml = t.details ? `<div class="task-details">📝 ${t.details}</div>` : '';
+    const descHtml = t.description ? `<div class="task-desc">${t.description}</div>` : '';
+    const subtasksHtml = (t.subtasks && t.subtasks.length) ? `
+      <div class="subtasks-list">
+        ${t.subtasks.map(st => `
+          <div class="subtask-item ${st.done ? 'done' : ''}" onclick="toggleSubtask(event, '${t.id}', '${st.id}')">
+            <div class="subtask-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+            <span>${st.text}</span>
+          </div>
+        `).join('')}
+      </div>
+    ` : '';
 
     card.innerHTML = `
       <div class="task-inner">
@@ -597,7 +618,8 @@ function renderTasks() {
         <div class="task-check" onclick="toggleTask(event, '${t.id}')"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
         <div class="task-content" onclick="openEditModal('${t.id}')">
           <div class="task-title">${t.text}</div>
-          ${detailsHtml}
+          ${descHtml}
+          ${subtasksHtml}
           ${timeHtml}
         </div>
         <button class="task-del" onclick="deleteTask(event, '${t.id}')">×</button>
@@ -618,6 +640,15 @@ function toggleTask(e, id) {
   save(); renderTasks(); renderStats();
 }
 
+function toggleSubtask(e, taskId, subtaskId) {
+  e.stopPropagation();
+  const day = getDay(activeDate);
+  const t = day.tasks.find(x => x.id === taskId);
+  if (!t || !t.subtasks) return;
+  const st = t.subtasks.find(x => x.id === subtaskId);
+  if (st) { st.done = !st.done; save(); renderTasks(); }
+}
+
 function deleteTask(e, id) {
   e.stopPropagation();
   const day = getDay(activeDate);
@@ -625,14 +656,44 @@ function deleteTask(e, id) {
   save(); renderTasks(); renderStats();
 }
 
+// === МОДАЛКА ПОДЗАДАЧ ===
+function renderModalSubtasks() {
+  const list = document.getElementById('modalSubtasksList');
+  list.innerHTML = tempSubtasks.map(st => `
+    <div class="modal-subtask-item">
+      <span>${st.text}</span>
+      <button type="button" onclick="removeSubtaskFromModal('${st.id}')">×</button>
+    </div>
+  `).join('');
+}
+
+function addSubtaskFromModal() {
+  const input = document.getElementById('subtaskInput');
+  const text = input.value.trim();
+  if (text) {
+    tempSubtasks.push({ id: Date.now().toString(), text, done: false });
+    input.value = '';
+    renderModalSubtasks();
+  }
+}
+
+function removeSubtaskFromModal(id) {
+  tempSubtasks = tempSubtasks.filter(st => st.id !== id);
+  renderModalSubtasks();
+}
+
+// === ДОБАВЛЕНИЕ / РЕДАКТИРОВАНИЕ ===
 function openAddModal() {
   editingTaskId = null;
+  tempSubtasks = [];
+  renderModalSubtasks();
   document.getElementById('modalTitle').textContent = 'Что в планах?';
   document.getElementById('btnSaveTask').textContent = 'Добавить';
   document.getElementById('taskInput').value = '';
-  document.getElementById('taskDetailsInput').value = '';
+  document.getElementById('taskDescInput').value = '';
   document.getElementById('timeStart').value = '';
   document.getElementById('timeEnd').value = '';
+  document.getElementById('subtaskInput').value = '';
   selectDiff(1);
   document.getElementById('modalAdd').classList.add('open');
 }
@@ -642,12 +703,15 @@ function openEditModal(id) {
   const t = day.tasks.find(x => x.id === id);
   if (!t) return;
   editingTaskId = id;
+  tempSubtasks = t.subtasks ? JSON.parse(JSON.stringify(t.subtasks)) : [];
+  renderModalSubtasks();
   document.getElementById('modalTitle').textContent = 'Редактировать';
   document.getElementById('btnSaveTask').textContent = 'Сохранить';
   document.getElementById('taskInput').value = t.text;
-  document.getElementById('taskDetailsInput').value = t.details || '';
+  document.getElementById('taskDescInput').value = t.description || '';
   document.getElementById('timeStart').value = t.timeStart || '';
   document.getElementById('timeEnd').value = t.timeEnd || '';
+  document.getElementById('subtaskInput').value = '';
   selectDiff(t.diff || 1);
   document.getElementById('modalAdd').classList.add('open');
 }
@@ -660,7 +724,7 @@ function selectDiff(val) {
 
 function saveTask() {
   const text = document.getElementById('taskInput').value.trim(); if (!text) return;
-  const details = document.getElementById('taskDetailsInput').value.trim();
+  const desc = document.getElementById('taskDescInput').value.trim();
   const tStart = document.getElementById('timeStart').value || null;
   const tEnd = document.getElementById('timeEnd').value || null;
   
@@ -668,9 +732,9 @@ function saveTask() {
   
   if (editingTaskId) {
     const t = day.tasks.find(x => x.id === editingTaskId);
-    if (t) { t.text = text; t.details = details; t.diff = selectedDiff; t.timeStart = tStart; t.timeEnd = tEnd; }
+    if (t) { t.text = text; t.description = desc; t.subtasks = tempSubtasks; t.diff = selectedDiff; t.timeStart = tStart; t.timeEnd = tEnd; }
   } else {
-    day.tasks.push({ id: Date.now().toString(), text, details, diff: selectedDiff, timeStart: tStart, timeEnd: tEnd, done: false });
+    day.tasks.push({ id: Date.now().toString(), text, description: desc, subtasks: tempSubtasks, diff: selectedDiff, timeStart: tStart, timeEnd: tEnd, done: false });
   }
   
   save(); renderTasks(); closeModal('modalAdd');
@@ -682,72 +746,51 @@ function renderNote() {
   const day = getDay(activeDate);
   if (document.activeElement !== note) note.value = day.note || '';
 }
-
-function saveNote(val) {
-  getDay(activeDate).note = val;
-  save();
-}
+function saveNote(val) { getDay(activeDate).note = val; save(); }
 
 // === ПРОГРЕСС ===
 function renderStats() {
-  let totalDone = 0;
-  let activeDaysCount = 0;
-
+  let totalDone = 0; let activeDaysCount = 0;
   Object.values(state.days).forEach(d => {
     const done = d.tasks.filter(t => t.done).length;
     totalDone += done;
     if (done > 0) activeDaysCount++;
   });
-
   document.getElementById('statTotal').textContent = totalDone;
   document.getElementById('statAvg').textContent = activeDaysCount ? (totalDone / activeDaysCount).toFixed(1) : 0;
 
-  // Heatmap (30 дней)
   const heatmap = document.getElementById('heatmap'); heatmap.innerHTML = '';
   const today = new Date();
-  
   for (let i = 29; i >= 0; i--) {
     const d = new Date(today); d.setDate(today.getDate() - i);
     const key = dateKey(d);
     const dayData = state.days[key];
     const done = dayData ? dayData.tasks.filter(t => t.done).length : 0;
-    
-    let lvl = 0;
-    if (done > 0) lvl = 1;
-    if (done >= 3) lvl = 2;
-    if (done >= 5) lvl = 3;
-
+    let lvl = 0; if (done > 0) lvl = 1; if (done >= 3) lvl = 2; if (done >= 5) lvl = 3;
     const cell = document.createElement('div');
     cell.className = `heat-cell lvl-${lvl}` + (i === 0 ? ' today' : '');
     cell.title = `${d.getDate()}.${d.getMonth()+1}: ${done} задач`;
     heatmap.appendChild(cell);
   }
 
-  // Настроение (последние 7 дней)
   const moodTracker = document.getElementById('moodTracker'); moodTracker.innerHTML = '';
   const daysShort = ['ВС','ПН','ВТ','СР','ЧТ','ПТ','СБ'];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(today); d.setDate(today.getDate() - i);
     const key = dateKey(d);
     const mood = state.days[key] ? state.days[key].mood : '';
-    
     const el = document.createElement('div');
     el.className = 'mood-day';
-    el.innerHTML = `
-      <div class="mood-name">${daysShort[d.getDay()]}</div>
-      <div class="mood-emoji ${mood ? 'set' : ''}" onclick="openMoodModal('${key}')">${mood || '○'}</div>
-    `;
+    el.innerHTML = `<div class="mood-name">${daysShort[d.getDay()]}</div><div class="mood-emoji ${mood ? 'set' : ''}" onclick="openMoodModal('${key}')">${mood || '○'}</div>`;
     moodTracker.appendChild(el);
   }
 
-  // Архив
   const archive = document.getElementById('archiveList'); archive.innerHTML = '';
   let allDone = [];
   Object.entries(state.days).forEach(([date, data]) => {
     data.tasks.forEach(t => { if (t.done) allDone.push({ date, text: t.text }); });
   });
   allDone.sort((a,b) => b.date.localeCompare(a.date));
-  
   if (!allDone.length) archive.innerHTML = '<div style="color:var(--text-muted); font-size:14px;">Пока нет выполненных задач</div>';
   allDone.slice(0, 10).forEach(item => {
     const d = item.date.split('-').reverse().slice(0,2).join('.');
@@ -756,10 +799,7 @@ function renderStats() {
 }
 
 let currentMoodDate = '';
-function openMoodModal(date) {
-  currentMoodDate = date;
-  document.getElementById('modalMood').classList.add('open');
-}
+function openMoodModal(date) { currentMoodDate = date; document.getElementById('modalMood').classList.add('open'); }
 function setMood(emoji) {
   if (!state.days[currentMoodDate]) state.days[currentMoodDate] = { tasks: [], energy: '', water: 0, note: '', mood: '' };
   state.days[currentMoodDate].mood = emoji;
